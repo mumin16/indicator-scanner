@@ -1,0 +1,48 @@
+INPUTS={Period={14,9,51,3}}
+OUTPUTS={ BuySignalAgo={DRAW_NONE,"Color",SHIFT_NONE}}
+DESCRIPTION="RSI Divergence Buy Signal Scan"
+
+function calc()
+  local z=ZIGZAG(Period,5,3)
+  local rsi=RSI(CLOSE,Period)
+
+
+  local lpos={}
+  
+for i=1,#z,1 do
+  if z[i]>0 and z[i]==LOW[i] then
+    table.insert(lpos,i)
+  end
+end
+
+BuySignalAgo={}
+Color={}
+BuySignalAgo[1]=-1
+
+  for j=#lpos,2,-1 do
+    if(lpos[j]+3> #rsi or lpos[j]-3<1) then break end
+    
+    if(math.abs(LOW[lpos[j]]-LOW[lpos[j-1]]) /LOW[lpos[j-1]]>=0.05)  and (math.abs(rsi[lpos[j]]-rsi[lpos[j-1]]) /rsi[lpos[j-1]]>=0.05) then  
+    
+    
+    local Rsimn1=math.min(rsi[lpos[j]-3] ,rsi[lpos[j]-2],rsi[lpos[j]-1],rsi[lpos[j]],rsi[lpos[j]+1],rsi[lpos[j]+2],rsi[lpos[j]+3])
+    local Rsimn2=math.min(rsi[lpos[j-1]-3] ,rsi[lpos[j-1]-2],rsi[lpos[j-1]-1],rsi[lpos[j-1]],rsi[lpos[j-1]+1],rsi[lpos[j-1]+2],rsi[lpos[j-1]+3])
+    
+  if (LOW[lpos[j]]>LOW[lpos[j-1]] and Rsimn1<Rsimn2) or (LOW[lpos[j]]<LOW[lpos[j-1]] and Rsimn1>Rsimn2)  then     
+  --print("rsi divergence pos: " , lpos[j])
+	BuySignalAgo[1]= #LOW-lpos[j]
+  break
+  end
+  end
+  end
+
+ 
+
+
+if BuySignalAgo[1]==0 then Color[1]=CLR_GREEN else Color[1]=CLR_RED end
+if BuySignalAgo[1]==-1 or BuySignalAgo[1]>10  then
+	return DISCARD_RETURN
+	else
+	   return OK_RETURN
+	end
+end

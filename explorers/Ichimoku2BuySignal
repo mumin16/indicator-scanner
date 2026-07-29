@@ -1,0 +1,71 @@
+INPUTS={ ConversionLinePeriod={14,2,100,1},BaseLinePeriod={40,2,260,1},SpanBPeriod={75,2,520,1}}
+OUTPUTS={ BuySignalAgo={DRAW_NONE,"Color",SHIFT_NONE}}
+DESCRIPTION="Ichimoku2 CrossOver"
+
+  local function iHighest(StartPos, Depth)
+    local res = HIGH[StartPos];
+    for i = StartPos - Depth + 1, StartPos, 1 do
+      if (HIGH[i] > res) then
+        res = HIGH[i];
+      end
+    end
+    return (res);
+  end
+  local function iLowest(StartPos, Depth)
+    local res = LOW[StartPos];
+    for i = StartPos - Depth + 1, StartPos, 1 do
+      if (LOW[i] < res) then
+        res = LOW[i];
+      end
+    end
+    return (res);
+  end
+
+function calc()
+-- indicator buffers
+SpanA={}  SpanB={} 
+
+
+   for i=SpanBPeriod, #CLOSE,1 do
+	local cl=(iHighest(i,ConversionLinePeriod)+iLowest(i,ConversionLinePeriod))/2
+	local bl=(iHighest(i,BaseLinePeriod)+iLowest(i,BaseLinePeriod))/2
+	 SpanA[i-SpanBPeriod+1]=(cl+bl)/2
+	 SpanB[i-SpanBPeriod+1]=(iHighest(i,SpanBPeriod)+iLowest(i,SpanBPeriod))/2
+
+   end
+
+
+
+BuySignalAgo={}
+BuySignalAgo[1]=-1
+
+Color={}
+Color[1]=CLR_RED
+
+
+local count=0;
+  for i = #SpanB, 2, -1 do
+	if (CLOSE[#CLOSE] > SpanB[#SpanB] and CLOSE[#CLOSE] > SpanA[#SpanA] )
+		and (CLOSE[#CLOSE-count] > SpanB[i] and CLOSE[#CLOSE-count] > SpanA[i] )
+		and (CLOSE[#CLOSE-count-1] < SpanB[i-1] or CLOSE[#CLOSE-count-1] < SpanA[i-1])
+	then 
+		BuySignalAgo[1]=count
+		if count==0 then Color[1]=CLR_GREEN end		
+		return OK_RETURN
+	elseif (CLOSE[#CLOSE-count] < SpanB[i] and CLOSE[#CLOSE-count] < SpanA[i] )
+		and (CLOSE[#CLOSE-count-1] > SpanB[i-1] or CLOSE[#CLOSE-count-1] > SpanA[i-1])
+
+	then
+
+		return DISCARD_RETURN
+		
+	end
+
+	count=count+1
+  end
+
+
+
+return DISCARD_RETURN
+
+end

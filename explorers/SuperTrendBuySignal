@@ -1,0 +1,28 @@
+INPUTS={Period={5,5,15,1},Multiplier={2,1,6,1}}
+OUTPUTS={ BuySignalAgo={DRAW_NONE,"Color",SHIFT_NONE}}
+DESCRIPTION="SuperTrend Buy Signal Scan"
+
+function calc()
+  local st,clr=SUPERTREND(Period, Multiplier)
+local diff=#CLOSE-#st
+
+BuySignalAgo={}
+Color={}
+
+  for i = #st, #st-10, -1 do
+	if CLOSE[i+diff]>st[i] and CLOSE[i+diff-1]<st[i-1] then 
+		BuySignalAgo[1]=#CLOSE-i-diff
+		break
+	else
+		BuySignalAgo[1]=-1
+	end
+  end
+
+
+if BuySignalAgo[1]==0 then Color[1]=CLR_GREEN else Color[1]=CLR_RED end
+if BuySignalAgo[1]==-1  then
+	return DISCARD_RETURN
+	else
+	   return OK_RETURN
+	end
+end

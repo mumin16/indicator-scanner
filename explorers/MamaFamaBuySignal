@@ -1,0 +1,32 @@
+INPUTS={FastLimit={0.5,0.1,1,0.1},
+        SlowLimit={0.05,0.01,0.1,0.01}}
+OUTPUTS={ BuySignalAgo={DRAW_NONE,"Color",SHIFT_NONE}}
+DESCRIPTION="Mama Fama Buy Signal Scan"
+
+function calc()
+local Mama,Fama=MamaFamaOsc(MEDIAN,FastLimit,SlowLimit)
+
+
+local diff=#CLOSE-#Mama
+
+BuySignalAgo={}
+Color={}
+
+  for i = #Mama, #Mama-10, -1 do
+	if Mama[i+diff]>Fama[i] and Mama[i+diff-1]<Fama[i-1] then 
+		BuySignalAgo[1]=#CLOSE-i-diff
+		break
+
+	else
+		BuySignalAgo[1]=-1
+	end
+  end
+
+
+if BuySignalAgo[1]==0 then Color[1]=CLR_GREEN else Color[1]=CLR_RED end
+if BuySignalAgo[1]==-1  then
+	return DISCARD_RETURN
+	else
+	   return OK_RETURN
+	end
+end

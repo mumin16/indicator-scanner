@@ -1,0 +1,41 @@
+INPUTS={ FastPeriod={50,2,100,1},SlowPeriod={200,2,300,1}}
+OUTPUTS={ BuySignalAgo={DRAW_NONE,"Color",SHIFT_NONE}}
+DESCRIPTION="Money Flow Index Signal Scan"
+
+function calc()
+  local fastSMA=SMA(MODE_SMA,FastPeriod) 
+  local slowSMA=SMA(MODE_SMA,SlowPeriod) 
+
+
+BuySignalAgo={}
+BuySignalAgo[1]=-1
+
+Color={}
+Color[1]=CLR_GREEN
+
+
+
+  for i = 0, #slowSMA-2, 1 do
+	if (fastSMA[#fastSMA-i] > slowSMA[#slowSMA-i]) and (fastSMA[#fastSMA-i-1] < slowSMA[#slowSMA-i-1])
+		
+	then 
+		BuySignalAgo[1]=i
+		return OK_RETURN
+	elseif (fastSMA[#fastSMA-i] < slowSMA[#slowSMA-i]) and (fastSMA[#fastSMA-i-1] > slowSMA[#slowSMA-i-1])
+
+
+	then
+
+		return DISCARD_RETURN
+		
+	end
+
+
+  end
+
+
+
+return DISCARD_RETURN
+
+
+end

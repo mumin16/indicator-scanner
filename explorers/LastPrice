@@ -1,0 +1,15 @@
+OUTPUTS={ LastPrice={DRAW_NONE,CLR_BLUE,SHIFT_NONE},Change={DRAW_NONE,"ChangeColor",SHIFT_NONE}} 
+DESCRIPTION="LastPrice"
+
+function calc()
+LastPrice={}
+Change={}
+ChangeColor={}
+
+	LastPrice[1]=CLOSE[#CLOSE]
+	Change[1]=(CLOSE[#CLOSE]-CLOSE[#CLOSE-1])/CLOSE[#CLOSE-1]*100
+
+if Change[1]>0 then ChangeColor[1]=CLR_GREEN else ChangeColor[1]=CLR_RED end
+
+return OK_RETURN
+end

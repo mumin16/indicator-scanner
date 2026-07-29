@@ -1,0 +1,31 @@
+INPUTS={FastEma={3,2,99,1},
+        SlowEma={7,2,99,1},
+        MacdSma={3,2,99,1},
+        PriceType={6,0,6,1}}
+OUTPUTS={ BuySignalAgo={DRAW_NONE,"Color",SHIFT_NONE}}
+DESCRIPTION="BollingerBandMacd Signal Scan, PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function calc()
+  local st=MACDSIGNAL(PriceType,FastEma,SlowEma,MacdSma)
+local diff=#CLOSE-#st
+
+BuySignalAgo={}
+Color={}
+
+  for i = #st, #st-10, -1 do
+	if st[i]>0 and st[i-1]< 0 then 
+		BuySignalAgo[1]=#CLOSE-i-diff
+		break
+	else
+		BuySignalAgo[1]=-1
+	end
+  end
+
+
+if BuySignalAgo[1]==0 then Color[1]=CLR_GREEN else Color[1]=CLR_RED end
+if BuySignalAgo[1]==-1  then
+  return DISCARD_RETURN
+  else
+     return OK_RETURN
+  end
+end
