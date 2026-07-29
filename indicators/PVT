@@ -1,0 +1,12 @@
+SEPARATEWINDOW=true
+OUTPUTS={ Pvt={DRAW_LINE,CLR_GREEN,SHIFT_NONE}}
+DESCRIPTION="Price and Volume Trend"
+
+function calc()
+  Pvt=PVT()
+end
+
+
+
+
+

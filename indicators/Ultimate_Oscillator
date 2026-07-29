@@ -1,0 +1,19 @@
+SEPARATEWINDOW=true
+INPUTS={ FastPeriod={7,2,99,1},
+        MiddlePeriod={14,2,99,1},
+        SlowPeriod={28,2,99,1},
+        FastK={4,2,9,1},
+        MiddleK={2,1,9,1},
+        SlowK={1,1,9,1}}
+OUTPUTS={ UO={DRAW_LINE,CLR_GREEN,SHIFT_NONE}}
+LEVELS={30,70}
+DESCRIPTION="Ultimate Oscillator"
+
+function calc()
+UO=UltimateOsc(FastPeriod,MiddlePeriod,SlowPeriod,FastK,MiddleK,SlowK)
+end
+
+
+
+
+

@@ -1,0 +1,13 @@
+SEPARATEWINDOW=true
+INPUTS={ Period={14,2,99,1}}
+OUTPUTS={ Atr={DRAW_LINE,CLR_GREEN,SHIFT_NONE}}
+DESCRIPTION="Average True Range"
+
+function calc()
+  Atr=ATR(Period)
+end
+
+
+
+
+

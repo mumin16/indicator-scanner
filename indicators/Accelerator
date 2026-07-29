@@ -1,0 +1,12 @@
+SEPARATEWINDOW=true
+OUTPUTS={ Ac={DRAW_HISTOGRAM,"Color",SHIFT_NONE}}
+DESCRIPTION="Accelerator/Decelerator"
+
+function calc()
+  Ac,Color=AC()
+end
+
+
+
+
+

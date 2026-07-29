@@ -1,0 +1,14 @@
+SEPARATEWINDOW=true
+INPUTS={ Period={10,2,99,1},SmoothPeriod={10,2,99,1},MaType={1,0,1,1}}
+OUTPUTS={ Chv={DRAW_LINE,CLR_GREEN,SHIFT_NONE}}
+LEVELS={0}
+DESCRIPTION="Chaikin Volatility - MaType can be sma=0 ema=1"
+
+function calc()
+  Chv=CHV(Period,SmoothPeriod,MaType)
+end
+
+
+
+
+
