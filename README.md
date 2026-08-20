@@ -8,3 +8,9 @@ https://play.google.com/store/apps/details?id=com.musavir.IndicatorScanner
 
 ZeroBrane Studio is nice editor and debugger:
 https://studio.zerobrane.com/
+
+
+
+https://github.com/user-attachments/assets/5241ea78-60a6-4a67-a8a3-e861d01dda54
+
+
