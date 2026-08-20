@@ -1,0 +1,12 @@
+OUT={LastPrice=0,Change=0} 
+DESCRIPTION="LastPrice Change"
+
+function calc()
+
+
+	OUT.LastPrice=CLOSE[#CLOSE]
+  OUT.Change=(CLOSE[#CLOSE]-CLOSE[#CLOSE-1])/CLOSE[#CLOSE-1]*100
+
+
+return OK_RETURN
+end

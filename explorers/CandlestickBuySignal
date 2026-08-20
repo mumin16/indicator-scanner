@@ -1,0 +1,29 @@
+OUT={ Marubozu =-1,Doji =-1,Hammer =-1,Harami =-1,Engulfing =-1}
+DESCRIPTION="Candlestick patterns buy signal scan"
+
+function calc()
+
+
+
+
+
+  for i = #CLOSE, #CLOSE, -1 do
+	
+  if OPEN[i]==LOW[i] and CLOSE[i]==HIGH[i] and HIGH[i]>LOW[i] then  OUT.Marubozu=#CLOSE-i else OUT.Marubozu=-1	end
+  
+  if OPEN[i]==CLOSE[i] and HIGH[i]>LOW[i] and CLOSE[i]>LOW[i]  and CLOSE[i]<HIGH[i] then  OUT.Doji=#CLOSE-i else OUT.Doji=-1	end
+  
+  if CLOSE[i]==HIGH[i] and OPEN[i]>LOW[i] and CLOSE[i]>OPEN[i] then  OUT.Hammer=#CLOSE-i else OUT.Hammer=-1	end
+  
+  if CLOSE[i-1]<OPEN[i-1] and CLOSE[i]>OPEN[i] and HIGH[i]<HIGH[i-1] and LOW[i]>LOW[i-1] and OPEN[i]>CLOSE[i-1] and CLOSE[i]<OPEN[i-1]  then  OUT.Harami=#CLOSE-i else OUT.Harami=-1	end
+  
+  if CLOSE[i-1]<OPEN[i-1] and CLOSE[i]>OPEN[i] and HIGH[i]>HIGH[i-1] and LOW[i]<LOW[i-1] and CLOSE[i]>OPEN[i-1] and OPEN[i]<CLOSE[i-1]  then  OUT.Engulfing=#CLOSE-i else OUT.Engulfing=-1	end
+  
+  end
+
+
+
+
+if OUT.Marubozu==-1 and OUT.Doji==-1 and OUT.Hammer==-1 and OUT.Harami==-1 and OUT.Engulfing==-1 then	return DISCARD_RETURN	else   return OK_RETURN	end
+
+end
