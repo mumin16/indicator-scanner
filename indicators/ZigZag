@@ -1,0 +1,16 @@
+SEPARATEWINDOW=false
+INPUTS={ Depth={21,2,99,1},
+        Deviation={5,2,9,1},
+        Backstep={3,1,9,1}
+        }
+OUTPUTS={ ZigZag={DRAW_SECTION,CLR_ORANGE,SHIFT_NONE}}
+DESCRIPTION="ZigZag"
+
+function calc()
+  ZigZag=ZIGZAG(Depth,Deviation,Backstep)
+end
+
+
+
+
+		

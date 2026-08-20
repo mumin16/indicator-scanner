@@ -1,0 +1,16 @@
+SEPARATEWINDOW=false
+INPUTS={ CmoPeriod={9,2,99,1},
+        EmaPeriod={12,2,99,1},
+        PriceType={0,0,6,1}
+        }
+OUTPUTS={ Vidya={DRAW_LINE,CLR_GREEN,SHIFT_NONE}}
+DESCRIPTION="Variable Index Dynamic Average - PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function calc()
+  Vidya=VIDYA(PriceType,CmoPeriod,EmaPeriod)
+end
+
+
+
+
+

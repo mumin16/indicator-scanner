@@ -1,0 +1,14 @@
+SEPARATEWINDOW=true
+INPUTS={ Period={14,2,99,1}}
+OUTPUTS={ WPr={DRAW_LINE,CLR_GREEN,SHIFT_NONE}}
+LEVELS={-20,-80}
+DESCRIPTION="Larry Williams' Percent Range"
+
+function calc()
+  WPr=WPR(Period)
+end
+
+
+
+
+
