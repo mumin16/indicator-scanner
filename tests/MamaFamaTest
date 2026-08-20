@@ -1,0 +1,37 @@
+
+
+IN={ FastLimit_opt1={min=0.3,max=0.7,step=0.1},
+        SlowLimit_opt2={min=0.03,max=0.07,step=0.01}}
+        
+OUT={ REPORTS={}}
+        
+DESCRIPTION="MamaFama Test"
+
+function calc()
+
+
+  for opt1=IN.FastLimit_opt1.min, IN.FastLimit_opt1.max, IN.FastLimit_opt1.step do 
+      for opt2=IN.SlowLimit_opt2.min, IN.SlowLimit_opt2.max, IN.SlowLimit_opt2.step do 
+        
+    local Mama,Fama=MamaFamaOsc(MEDIAN,opt1,opt2)
+    
+    
+    local BuySignals={}
+    local SellSignals={}
+     for i = 2, #CLOSE, 1 do
+        if Mama[i] > Fama[i] and Mama[i - 1 ] < Fama[i  - 1] then table.insert(BuySignals, i)  end
+        if Mama[i] < Fama[i] and Mama[i - 1] > Fama[i  - 1] then table.insert(SellSignals, i)  end
+      end
+      
+
+    
+    local report=CreateTestReport(BuySignals,SellSignals,opt1,opt2)
+    table.insert(OUT.REPORTS,report)
+    
+  
+    end
+  end
+  
+  return OK_RETURN
+  
+end
