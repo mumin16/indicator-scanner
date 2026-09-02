@@ -1,0 +1,80 @@
+
+IN={ ConversionLine_opt1={min=7,max=21,step=7},        BaseLine_opt2={min=14,max=28,step=7},        SpanB_opt3={min=21,max=49,step=7}}
+        
+OUT={ REPORTS={}}
+        
+DESCRIPTION="Ichimoku2 Test\nCondition: SpanA SpanB CLOSE cross over"
+
+  local function iHighest(StartPos, Depth)
+    local res = HIGH[StartPos];
+    for i = StartPos - Depth + 1, StartPos, 1 do
+      if (HIGH[i] > res) then
+        res = HIGH[i];
+      end
+    end
+    return (res);
+  end
+  local function iLowest(StartPos, Depth)
+    local res = LOW[StartPos];
+    for i = StartPos - Depth + 1, StartPos, 1 do
+      if (LOW[i] < res) then
+        res = LOW[i];
+      end
+    end
+    return (res);
+  end
+
+function calc()
+
+
+  for opt1=IN.ConversionLine_opt1.min, IN.ConversionLine_opt1.max, IN.ConversionLine_opt1.step do 
+      for opt2=IN.BaseLine_opt2.min, IN.BaseLine_opt2.max, IN.BaseLine_opt2.step do 
+        for opt3=IN.SpanB_opt3.min, IN.SpanB_opt3.max, IN.SpanB_opt3.step do 
+    
+        
+   
+        if ((opt1>opt2 or opt1>opt3) or (opt2>opt3 or opt2<opt1) or (opt3<opt1 or opt3<opt2)) then goto continue end
+    
+-- indicator buffers
+local SpanA={}  
+local SpanB={} 
+
+   for i=opt3, #CLOSE,1 do
+    local cl=(iHighest(i,opt1)+iLowest(i,opt1))/2
+    local bl=(iHighest(i,opt2)+iLowest(i,opt2))/2
+	 SpanA[i-opt3+1]=(cl+bl)/2
+	 SpanB[i-opt3+1]=(iHighest(i,opt3)+iLowest(i,opt3))/2
+   end
+   
+    local diff=#CLOSE-#SpanA
+    
+    local BuySignals={}
+    local SellSignals={}
+     for i = 2, #SpanA, 1 do
+          if (SpanB[i]<SpanA[i] and SpanB[i-1]>SpanA[i-1]) 
+            or
+              (SpanB[i]<SpanA[i] and CLOSE[i+diff]>SpanA[i]  and CLOSE[i+diff-1]<SpanA[i-1]) 
+          then table.insert(BuySignals, i)  end
+          if (SpanB[i]>SpanA[i] and SpanB[i-1]<SpanA[i-1] ) 
+            or
+            (CLOSE[i+diff]<SpanB[i] and CLOSE[i+diff-1]>SpanB[i-1])         
+          then table.insert(SellSignals, i)  end
+     end
+      
+
+    
+    local report=CreateTestReport(BuySignals,SellSignals,opt1,opt2,opt3)
+    table.insert(OUT.REPORTS,report)
+    
+
+    ::continue::
+  
+    end
+  end
+  end
+  
+  return OK_RETURN
+  
+end
+
+

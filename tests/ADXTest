@@ -1,0 +1,37 @@
+
+
+IN={ Period_opt1={min=7,max=49,step=7}}
+        
+OUT={ REPORTS={}}
+        
+DESCRIPTION="ADX Test\nCondition: BuySell(Pdi<>Mdi)"
+
+function calc()
+
+
+  for opt1=IN.Period_opt1.min, IN.Period_opt1.max, IN.Period_opt1.step do 
+     
+ 
+     local Pdi=PLUSDI(opt1)
+  local Mdi=MINUSDI(opt1)
+  
+    
+    local BuySignals={}
+    local SellSignals={}
+     for i = 2, #CLOSE, 1 do
+        if Pdi[i] > Mdi[i] and Pdi[i - 1] < Mdi[i  - 1] then table.insert(BuySignals, i)  end
+        if Pdi[i] < Mdi[i] and Pdi[i - 1] > Mdi[i  - 1] then table.insert(SellSignals, i)  end
+     end
+      
+
+    
+    local report=CreateTestReport(BuySignals,SellSignals,opt1)
+    table.insert(OUT.REPORTS,report)
+    
+  
+   
+  end
+  
+  return OK_RETURN
+  
+end

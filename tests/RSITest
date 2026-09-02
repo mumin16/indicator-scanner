@@ -1,0 +1,36 @@
+
+
+IN={ Period_opt1={min=7,max=49,step=7}}
+        
+OUT={ REPORTS={}}
+        
+DESCRIPTION="RSI Test\nCondition: BuySell(RSI<>30,70)"
+
+function calc()
+
+
+  for opt1=IN.Period_opt1.min, IN.Period_opt1.max, IN.Period_opt1.step do 
+     
+ local Rsi=RSI(CLOSE,opt1)
+
+  local diff=#CLOSE-#Rsi
+    
+    local BuySignals={}
+    local SellSignals={}
+     for i = 2, #Rsi, 1 do
+        if (Rsi[i] > 30 and Rsi[i - 1] < 30) or (Rsi[i] > 70 and Rsi[i - 1] < 70) then table.insert(BuySignals, i+diff)  end
+        if (Rsi[i] < 30 and Rsi[i - 1] > 30) or (Rsi[i] < 70 and Rsi[i - 1] > 70)  then table.insert(SellSignals, i+diff)  end
+     end
+      
+
+    
+    local report=CreateTestReport(BuySignals,SellSignals,opt1)
+    table.insert(OUT.REPORTS,report)
+    
+  
+   
+  end
+  
+  return OK_RETURN
+  
+end

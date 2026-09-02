@@ -1,0 +1,41 @@
+
+
+IN={ Length_opt1={min=20,max=100,step=20},
+        SignalLength_opt2={min=10,max=100,step=10}}
+        
+OUT={ REPORTS={}}
+        
+DESCRIPTION="Andean Oscillator Test\nCondition: BuySell(Bull<>Bear or Signal)"
+
+function calc()
+
+
+
+  
+  for opt1=IN.Length_opt1.min, IN.Length_opt1.max, IN.Length_opt1.step do 
+      for opt2=IN.SignalLength_opt2.min, IN.SignalLength_opt2.max, IN.SignalLength_opt2.step do 
+        
+    local Bull,Bear,Signal=AndeanOsc(opt1,opt2)
+    
+    
+    
+    local BuySignals={}
+    local SellSignals={}
+     for i = 2, #CLOSE, 1 do
+        if (Bull[i] > Bear[i] and Bull[i - 1 ] < Bear[i  - 1]) or (Bull[i] > Signal[i] and Bull[i - 1 ] < Signal[i  - 1]) then table.insert(BuySignals, i)  end
+        
+        if (Bull[i] < Bear[i] and Bull[i - 1 ] > Bear[i  - 1]) or (Bull[i] < Signal[i] and Bull[i - 1 ] > Signal[i  - 1]) then table.insert(SellSignals, i)  end
+      end
+      
+
+    
+    local report=CreateTestReport(BuySignals,SellSignals,opt1,opt2)
+    table.insert(OUT.REPORTS,report)
+    
+  
+    end
+  end
+  
+  return OK_RETURN
+  
+end

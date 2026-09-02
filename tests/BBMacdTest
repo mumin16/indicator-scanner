@@ -1,0 +1,46 @@
+
+
+
+IN={ FastEma_opt1={min=5,max=50,step=5},
+SlowEma_opt2={min=5,max=50,step=5},
+}
+        
+OUT={ REPORTS={}}
+        
+DESCRIPTION="Bollinger Band Macd Test\nCondition: BuySell(Signal<>0 or previous) \nNote:  MacdSma=SlowEma"
+
+function calc()
+
+
+  for opt1=IN.FastEma_opt1.min, IN.FastEma_opt1.max, IN.FastEma_opt1.step do 
+  for opt2=IN.SlowEma_opt2.min, IN.SlowEma_opt2.max, IN.SlowEma_opt2.step do 
+     
+  if(opt1==opt2) then goto continue end
+
+  local pricetype=6
+  local MacdSma=opt2
+  local Signal=MACDSIGNAL(pricetype,opt1,opt2,MacdSma)
+  
+  if(#Signal<3) then  goto continue end
+  local diff=#CLOSE-#Signal
+    
+    local BuySignals={}
+    local SellSignals={}
+     for i = 3, #Signal, 1 do
+        if (Signal[i]>0 and Signal[i-1]< 0) or (Signal[i]>0 and Signal[i]>Signal[i-1] and Signal[i-1]<Signal[i-2]) then table.insert(BuySignals, i+diff)  end
+        if (Signal[i]<0 and Signal[i-1]> 0) or (Signal[i]>0 and Signal[i]<Signal[i-1] and Signal[i-1]>Signal[i-2]) then table.insert(SellSignals, i+diff)  end
+     end
+      
+
+    
+    local report=CreateTestReport(BuySignals,SellSignals,opt1,opt2)
+    table.insert(OUT.REPORTS,report)
+    
+  ::continue::
+   end
+  end
+  
+  return OK_RETURN
+  
+end
+

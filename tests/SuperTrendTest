@@ -1,0 +1,36 @@
+
+
+IN={ Period_opt1={min=5,max=25,step=5},        Multiplier_opt2={min=1,max=3,step=1}}
+        
+OUT={ REPORTS={}}
+        
+DESCRIPTION="SuperTrend Test\nCondition: BuySell(SuperTrend<>CLOSE)"
+
+function calc()
+
+
+  for opt1=IN.Period_opt1.min, IN.Period_opt1.max, IN.Period_opt1.step do 
+      for opt2=IN.Multiplier_opt2.min, IN.Multiplier_opt2.max, IN.Multiplier_opt2.step do 
+        
+    local SuperTrend=SUPERTREND(opt1, opt2)
+   
+    
+    local BuySignals={}
+    local SellSignals={}
+     for i = 2, #CLOSE, 1 do
+        if CLOSE[i] > SuperTrend[i] and CLOSE[i - 1] < SuperTrend[i  - 1] then table.insert(BuySignals, i)  end
+        if CLOSE[i] < SuperTrend[i] and CLOSE[i - 1] > SuperTrend[i  - 1] then table.insert(SellSignals, i)  end
+     end
+      
+
+    
+    local report=CreateTestReport(BuySignals,SellSignals,opt1,opt2)
+    table.insert(OUT.REPORTS,report)
+    
+  
+    end
+  end
+  
+  return OK_RETURN
+  
+end

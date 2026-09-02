@@ -1,0 +1,43 @@
+
+
+IN={ Period_opt1={min=7,max=49,step=7}}
+        
+OUT={ REPORTS={}}
+        
+DESCRIPTION="Momentum Test\nCondition: BuySell(MOMENTUM(CLOSE,period)<>100)"
+
+local function Momentum(period)
+  local out = {}
+  for i = 1, #CLOSE, 1 do
+    if i + period > #CLOSE then break else out[i] = (CLOSE[i + period] * 100 / CLOSE[i]) end
+  end
+  return out
+ end
+ 
+function calc()
+
+
+  for opt1=IN.Period_opt1.min, IN.Period_opt1.max, IN.Period_opt1.step do 
+   
+    local mo=Momentum(opt1)
+   local diff=#CLOSE-#mo
+    
+    local BuySignals={}
+    local SellSignals={}
+     for i = 2, #mo, 1 do
+        if mo[i] > 100 and mo[i  - 1]< 100  then table.insert(BuySignals, i+diff)  end
+        if mo[i] < 100 and mo[i  - 1]> 100 then table.insert(SellSignals, i+diff)  end
+     end
+      
+
+    
+    local report=CreateTestReport(BuySignals,SellSignals,opt1)
+    table.insert(OUT.REPORTS,report)
+    
+  
+    
+  end
+  
+  return OK_RETURN
+  
+end

@@ -1,0 +1,39 @@
+
+
+IN={ KPeriod_opt1={min=10,max=50,step=10},Slowing_opt2={min=5,max=25,step=5}}
+        
+OUT={ REPORTS={}}
+        
+DESCRIPTION="Stochastic Test\nCondition: BuySell(Stoch<>20,80)"
+
+function calc()
+
+
+  for opt1=IN.KPeriod_opt1.min, IN.KPeriod_opt1.max, IN.KPeriod_opt1.step do 
+  for opt2=IN.Slowing_opt2.min, IN.Slowing_opt2.max, IN.Slowing_opt2.step do 
+     
+
+local Stoch=STOCHASTIC(opt1,opt2)
+
+  local diff=#CLOSE-#Stoch
+    
+    local BuySignals={}
+    local SellSignals={}
+     for i = 2, #Stoch, 1 do
+        if (Stoch[i] > 20 and Stoch[i - 1] < 20) or (Stoch[i] > 80 and Stoch[i - 1] < 80) then table.insert(BuySignals, i+diff)  end
+        if (Stoch[i] < 20 and Stoch[i - 1] > 20) or (Stoch[i] < 80 and Stoch[i - 1] > 80)  then table.insert(SellSignals, i+diff)  end
+     end
+      
+
+    
+    local report=CreateTestReport(BuySignals,SellSignals,opt1,opt2)
+    table.insert(OUT.REPORTS,report)
+    
+  
+   
+  end
+  end
+  
+  return OK_RETURN
+  
+end

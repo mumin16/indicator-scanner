@@ -1,0 +1,36 @@
+
+
+IN={ Period_opt1={min=7,max=49,step=7}}
+        
+OUT={ REPORTS={}}
+        
+DESCRIPTION="Demarker Test\nCondition: BuySell(Demarker<>0.3,0.7)"
+
+function calc()
+
+
+  for opt1=IN.Period_opt1.min, IN.Period_opt1.max, IN.Period_opt1.step do 
+     local Demarker=DEMARKER(opt1)
+
+
+  local diff=#CLOSE-#Demarker
+    
+    local BuySignals={}
+    local SellSignals={}
+     for i = 2, #Demarker, 1 do
+        if (Demarker[i] > 0.30 and Demarker[i - 1] < 0.30) or (Demarker[i] > 0.70 and Demarker[i - 1] < 0.70) then table.insert(BuySignals, i+diff)  end
+        if (Demarker[i] < 0.30 and Demarker[i - 1] > 0.30) or (Demarker[i] < 0.70 and Demarker[i - 1] > 0.70)  then table.insert(SellSignals, i+diff)  end
+     end
+      
+
+    
+    local report=CreateTestReport(BuySignals,SellSignals,opt1)
+    table.insert(OUT.REPORTS,report)
+    
+  
+   
+  end
+  
+  return OK_RETURN
+  
+end

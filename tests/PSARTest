@@ -1,0 +1,38 @@
+
+
+  
+IN={ SarStep_opt1={min=0.002,max=0.02,step=0.002},        SarMaximum_opt2={min=0.02,max=0.2,step=0.02}}
+        
+OUT={ REPORTS={}}
+        
+DESCRIPTION="Parabolic Sar Test\nCondition: BuySell(SAR<>CLOSE)"
+
+function calc()
+
+
+  for opt1=IN.SarStep_opt1.min, IN.SarStep_opt1.max, IN.SarStep_opt1.step do 
+      for opt2=IN.SarMaximum_opt2.min, IN.SarMaximum_opt2.max, IN.SarMaximum_opt2.step do 
+        
+    local psar=PSAR(opt1,opt2)
+   
+    
+    local BuySignals={}
+    local SellSignals={}
+     for i = 2, #CLOSE, 1 do
+        if CLOSE[i] > psar[i] and CLOSE[i - 1] < psar[i  - 1] then table.insert(BuySignals, i)  end
+        if CLOSE[i] < psar[i] and CLOSE[i - 1] > psar[i  - 1] then table.insert(SellSignals, i)  end
+     end
+      
+
+    
+    local report=CreateTestReport(BuySignals,SellSignals,opt1,opt2)
+    table.insert(OUT.REPORTS,report)
+    
+  
+    end
+  end
+  
+  return OK_RETURN
+  
+end
+
