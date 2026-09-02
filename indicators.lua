@@ -161,9 +161,9 @@ function HMA(source, period)
   local medp = math.floor(period / 2);
   local HMABuffer = {}
 
-  for i = period, #CLOSE, 1 do
-    HMABuffer[i - period + 1] = 2 * LinearWeightedMA(i, medp, CLOSE)
-        - LinearWeightedMA(i, period, CLOSE);
+  for i = period, #source, 1 do
+    HMABuffer[i - period + 1] = 2 * LinearWeightedMA(i, medp, source)
+        - LinearWeightedMA(i, period, source);
   end
   local out = LWMA(HMABuffer, p)
   local colorbuffer = {}
@@ -643,6 +643,8 @@ end
 
 --Relative Strength Index
 function RSI(source, period)
+
+    
   if type(source) == type(1) then
     if source == 0 then
       source = CLOSE
@@ -662,6 +664,9 @@ function RSI(source, period)
   end
   local g = {}
   local l = {}
+      local out = {}
+    if period>#source then return out end
+    
   for i = 2, #source, 1 do
     if source[i] > source[i - 1] then
       g[i - 1] = source[i] - source[i - 1]
@@ -678,7 +683,7 @@ function RSI(source, period)
   end
   local ag = { 0 }
   local al = { 0 }
-  local out = {}
+
   for j = 1, period, 1 do
     ag[1] = ag[1] + g[j]
     al[1] = al[1] + l[j]
@@ -2221,6 +2226,7 @@ function SUPERTREND( Pd, Factor)
     local st={}
     local colorbuffer={}
 
+    if Pd>n then return st,colorbuffer end
     
             iatr = ATR(Pd) -- Assuming ATR function is defined externally
             local firstvalue=iatr[1];
