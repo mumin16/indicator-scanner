@@ -1,0 +1,29 @@
+IN={ Period=14}
+OUT={ BuySignalAgo=-1}
+DESCRIPTION="ADX Signal Scan"
+
+function calc()
+
+
+  local Pdi=PLUSDI(IN.Period)
+  local Mdi=MINUSDI(IN.Period)
+
+
+  for i = #CLOSE, #CLOSE-2, -1 do
+	if Pdi[i]>Mdi[i] and Pdi[i-1]<Mdi[i-1] and Pdi[#CLOSE]>Mdi[#CLOSE] then 
+		OUT.BuySignalAgo=#CLOSE-i
+		break
+	else
+		OUT.BuySignalAgo=-1
+	end
+  end
+
+
+
+if OUT.BuySignalAgo==-1  then
+	return DISCARD_RETURN
+	else
+	   return OK_RETURN
+	end
+  
+end

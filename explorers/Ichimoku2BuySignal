@@ -1,0 +1,69 @@
+
+
+
+IN={ ConversionLinePeriod=9,BaseLinePeriod=26,SpanBPeriod=52}
+OUT={ BuySignalAgo=-1}
+DESCRIPTION="Ichimoku2 SpanA SpanB CrossOver"
+
+  local function iHighest(StartPos, Depth)
+    local res = HIGH[StartPos];
+    for i = StartPos - Depth + 1, StartPos, 1 do
+      if (HIGH[i] > res) then
+        res = HIGH[i];
+      end
+    end
+    return (res);
+  end
+  local function iLowest(StartPos, Depth)
+    local res = LOW[StartPos];
+    for i = StartPos - Depth + 1, StartPos, 1 do
+      if (LOW[i] < res) then
+        res = LOW[i];
+      end
+    end
+    return (res);
+  end
+
+function calc()
+-- indicator buffers
+local SpanA={}  
+local SpanB={} 
+
+
+   for i=IN.SpanBPeriod, #CLOSE,1 do
+	local cl=(iHighest(i,IN.ConversionLinePeriod)+iLowest(i,IN.ConversionLinePeriod))/2
+	local bl=(iHighest(i,IN.BaseLinePeriod)+iLowest(i,IN.BaseLinePeriod))/2
+	 SpanA[i-IN.SpanBPeriod+1]=(cl+bl)/2
+	 SpanB[i-IN.SpanBPeriod+1]=(iHighest(i,IN.SpanBPeriod)+iLowest(i,IN.SpanBPeriod))/2
+   end
+
+if #SpanA<5 or #SpanB<5 then return DISCARD_RETURN end
+
+
+
+  for i = 0, 5, 1 do
+	if (SpanB[#SpanB-i]<SpanA[#SpanA-i] and SpanB[#SpanB-i-1]>SpanA[#SpanA-i-1] and CLOSE[#CLOSE]>SpanB[#SpanB] and CLOSE[#CLOSE]>SpanA[#SpanA]) 
+  or
+  (SpanB[#SpanB-i]<SpanA[#SpanA-i] and CLOSE[#CLOSE-i]>SpanA[#SpanA-i] and CLOSE[#CLOSE-i-1]<SpanA[#SpanA-i-1]) 
+	then 
+		OUT.BuySignalAgo=i
+    break
+	else
+		OUT.BuySignalAgo=-1
+	end
+
+
+  end
+
+
+
+if OUT.BuySignalAgo==-1  then
+	return DISCARD_RETURN
+	else
+	   return OK_RETURN
+	end
+
+end
+
+
+

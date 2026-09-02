@@ -1,0 +1,14 @@
+OUT={Performance=0} 
+DESCRIPTION="Performance Counter"
+
+function calc()
+
+
+	OUT.Performance=PERFORMANCE()
+
+ 
+
+
+
+return OK_RETURN
+end

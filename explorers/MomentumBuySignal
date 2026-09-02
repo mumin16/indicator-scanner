@@ -1,0 +1,39 @@
+IN={ Period=14}
+OUT={ BuySignalAgo=-1}
+DESCRIPTION="Momentum(CLOSE,Period)>100 Signal Scan"
+
+local function Momentum(period)
+  local out = {}
+  for i = 1, #CLOSE, 1 do
+    if i + period > #CLOSE then break else out[i] = (CLOSE[i + period] * 100 / CLOSE[i]) end
+  end
+  return out
+ end
+ 
+ 
+function calc()
+
+
+  local mo=Momentum(IN.Period)
+  if #mo<3 then return DISCARD_RETURN end 
+ local diff=#CLOSE-#mo
+
+
+  for i = #mo, #mo-2, -1 do
+	if mo[i]>100 and mo[i-1]<100 then 
+		OUT.BuySignalAgo=#CLOSE-i-diff
+		break
+	else
+		OUT.BuySignalAgo=-1
+	end
+  end
+
+
+
+if OUT.BuySignalAgo==-1  then
+	return DISCARD_RETURN
+	else
+	   return OK_RETURN
+	end
+  
+end
