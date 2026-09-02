@@ -1,0 +1,16 @@
+SEPARATEWINDOW=true
+INPUTS={ Period={100,2,100,1},Smooth={14,2,100,1}}
+OUTPUTS={ WPr={DRAW_LINE,CLR_RED,SHIFT_NONE},WPrAvg={DRAW_LINE,CLR_GREEN,SHIFT_NONE}}
+LEVELS={-20,-80}
+DESCRIPTION="Larry Williams' Percent Range and Hull Moving Average"
+
+function calc()
+  WPr=WPR(Period)
+  WPrAvg=HMA(WPr,Smooth) 
+  --WPrAvg=EMA(WPr,Smooth)
+end
+
+
+
+
+

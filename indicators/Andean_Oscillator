@@ -1,0 +1,18 @@
+SEPARATEWINDOW=true
+INPUTS={Length={50,5,100,5},
+        SignalLength={9,3,99,3}}
+
+OUTPUTS={ Bull={DRAW_LINE,CLR_GREEN,SHIFT_NONE},
+Bear={DRAW_LINE,CLR_RED,SHIFT_NONE},
+	Signal={DRAW_LINE,CLR_ORANGE,SHIFT_NONE}}
+
+DESCRIPTION="Andean Oscillator"
+
+function calc()
+  Bull,Bear,Signal=AndeanOsc(Length,SignalLength)
+end
+
+
+
+
+

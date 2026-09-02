@@ -1,0 +1,18 @@
+SEPARATEWINDOW=false
+INPUTS={ Period={14,2,99,1},  Devition={2,1.25,2.5,0.25},      PriceType={0,0,6,1}}
+OUTPUTS={ 
+  BandUp={DRAW_LINE,CLR_GREEN,SHIFT_NONE},
+	BandDown={DRAW_LINE,CLR_GREEN,SHIFT_NONE},
+	Sma={DRAW_LINE,CLR_GREEN,SHIFT_NONE}}
+DESCRIPTION="Bollinger Bands - PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function calc()
+
+  Sma,  BandUp,BandDown=BollingerBands(PriceType,Period,Devition)
+
+end
+
+
+
+
+

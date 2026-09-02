@@ -1,0 +1,34 @@
+SEPARATEWINDOW=true
+INPUTS={BBPeriod={12,2,99,1},
+BBDevition={2,1.25,3,.25},
+FastEma={6,2,99,1},
+        SlowEma={12,2,99,1},
+        MacdSma={6,2,99,1},
+        PriceType={6,0,6,1}}
+OUTPUTS={Signal={DRAW_POINT,"Color",SHIFT_NONE},
+	BandUp={DRAW_LINE,CLR_GREY,SHIFT_NONE},
+	BandDown={DRAW_LINE,CLR_GREY,SHIFT_NONE},
+	Sma={DRAW_DASHEDLINE,CLR_GREY,SHIFT_NONE}}
+LEVELS={0}
+DESCRIPTION="PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function calc()
+  
+  Signal=MACDSIGNAL(PriceType,FastEma,SlowEma,MacdSma)
+  BandUp=BANDSUPPER(Signal,BBPeriod,BBDevition)
+  BandDown=BANDSLOWER(Signal,BBPeriod,BBDevition)
+  Sma=SMA(Signal,BBPeriod)
+
+
+  Color={}
+  Color[1]=CLR_GREEN  
+  for  i=1,#Signal,1 do
+    if i~=1 and Signal[i]>Signal[i-1] then Color[i]=CLR_GREEN else Color[i]=CLR_RED end
+  end
+
+end
+
+
+
+
+

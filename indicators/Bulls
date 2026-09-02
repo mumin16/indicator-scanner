@@ -1,0 +1,13 @@
+SEPARATEWINDOW=true
+INPUTS={ Period={13,2,99,1}}
+OUTPUTS={ BullsPower={DRAW_HISTOGRAM,CLR_GREEN,SHIFT_NONE}}
+DESCRIPTION="Bulls Power"
+
+function calc()
+  BullsPower=BULLSPOWER(Period)
+end
+
+
+
+
+

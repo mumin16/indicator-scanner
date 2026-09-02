@@ -1,0 +1,13 @@
+SEPARATEWINDOW=false
+INPUTS={ Period={5,2,99,1},
+        Multiplier={2,1,6,1}}
+OUTPUTS={ SuperTrend={DRAW_LINE,"Color",SHIFT_NONE}}
+DESCRIPTION="Super Trend"
+
+function calc()
+  SuperTrend,Color=SUPERTREND(Period, Multiplier)
+end
+
+
+
+

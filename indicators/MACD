@@ -1,0 +1,18 @@
+SEPARATEWINDOW=true
+INPUTS={FastEma={12,2,99,1},
+        SlowEma={26,2,99,1},
+        MacdSma={9,2,99,1},
+        PriceType={0,0,6,1}}
+OUTPUTS={ Macd={DRAW_HISTOGRAM,CLR_GREEN,SHIFT_NONE},
+	Signal={DRAW_LINE,CLR_RED,SHIFT_NONE}}
+DESCRIPTION="PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function calc()
+  Macd=MACD(PriceType,FastEma,SlowEma)
+  Signal=MACDSIGNAL(PriceType,FastEma,SlowEma,MacdSma)
+end
+
+
+
+
+

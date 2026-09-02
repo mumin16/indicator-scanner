@@ -1,0 +1,14 @@
+SEPARATEWINDOW=false
+INPUTS={ SarStep={0.002,0.001,0.1,0.001},
+        SarMaximum={0.02,0.01,1,0.01}}
+OUTPUTS={ PSar={DRAW_POINT,CLR_GREEN,SHIFT_NONE}}
+DESCRIPTION="Parabolic Sar Indicator"
+
+function calc()
+  PSar=PSAR(SarStep,SarMaximum)
+end
+
+
+
+
+

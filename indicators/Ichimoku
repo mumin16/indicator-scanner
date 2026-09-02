@@ -1,0 +1,69 @@
+SEPARATEWINDOW=false
+INPUTS={ TenkanPeriod={9,2,99,1},KijunPeriod={26,2,99,1},SenkouPeriod={52,2,99,1}}
+OUTPUTS={ Tenkan={DRAW_LINE,CLR_RED,SHIFT_NONE},
+	Kijun={DRAW_LINE,CLR_BLUE,SHIFT_NONE},
+	SpanA={DRAW_LINE,CLR_BROWN,26},
+	SpanB={DRAW_LINE,CLR_LAVENDER,26},
+	Chikou={DRAW_LINE,CLR_GREEN,-26},
+   Cloud={DRAW_PAIRHISTOGRAM,CLR_OLIVE,26}
+}
+DESCRIPTION="Ichimoku Kinko Hyo"
+
+
+local function Highest(array, range, fromIndex)
+   res=array[fromIndex];
+   for  i=fromIndex,1, -1 do
+      if (i>fromIndex-range) then if(res<array[i]) then res=array[i] end end
+   end
+return(res);
+end
+
+local function Lowest(array, range, fromIndex)
+   res=array[fromIndex];
+   for i=fromIndex,1,-1 do
+      if (i>fromIndex-range) then if(res>array[i]) then res=array[i] end end
+    end
+return(res);
+end
+
+function calc()
+--BUFFERSSHIFT[5]=-KijunPeriod
+--BUFFERSSHIFT[3]=KijunPeriod BUFFERSSHIFT[4]=KijunPeriod
+-- indicator buffers
+Tenkan={} Kijun={} SpanA={}  SpanB={} Chikou={} Cloud={}
+
+
+   for i=1, #CLOSE,1 do
+      Chikou[i]=CLOSE[i];
+      -- tenkan sen
+      _high=Highest(HIGH,TenkanPeriod,i);
+      _low=Lowest(LOW,TenkanPeriod,i);
+      Tenkan[i]=(_high+_low)/2.0;
+      -- kijun sen
+      _high=Highest(HIGH,KijunPeriod,i);
+      _low=Lowest(LOW,KijunPeriod,i);
+      Kijun[i]=(_high+_low)/2.0;
+      -- senkou span a
+      SpanA[i]=(Tenkan[i]+Kijun[i])/2.0;
+      -- senkou span b
+      _high=Highest(HIGH,SenkouPeriod,i);
+      _low=Lowest(LOW,SenkouPeriod,i);
+      SpanB[i]=(_high+_low)/2.0;
+      ---cloud
+      Cloud[i*2]=SpanA[i]
+      Cloud[i*2-1]=SpanB[i]
+
+   end
+     
+end
+    
+
+    
+
+
+
+
+
+   
+
+   
