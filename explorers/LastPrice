@@ -1,0 +1,8 @@
+SIGNAL = { LastPrice = 0, Change = 0 }
+NOTE = "LastPrice Change"
+
+function CALC()
+  SIGNAL.LastPrice = CLOSE[#CLOSE]
+  SIGNAL.Change = (CLOSE[#CLOSE] - CLOSE[#CLOSE - 1]) / CLOSE[#CLOSE - 1] * 100
+  return OK_RETURN
+end

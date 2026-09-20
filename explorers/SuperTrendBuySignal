@@ -1,0 +1,26 @@
+IN = { Period = 5, Multiplier = 3 }
+SIGNAL = { BuySignalAgo = -1 }
+NOTE = "SuperTrend Buy Signal Scan"
+
+function CALC()
+	local st = SUPERTREND(IN.Period, IN.Multiplier)
+	if #st < 2 then return DISCARD_RETURN end
+	local diff = #CLOSE - #st
+
+
+	for i = #st, #st - 2, -1 do
+		if CLOSE[i + diff] > st[i] and CLOSE[i + diff - 1] < st[i - 1] then
+			SIGNAL.BuySignalAgo = #CLOSE - i - diff
+			break
+		else
+			SIGNAL.BuySignalAgo = -1
+		end
+	end
+
+
+	if SIGNAL.BuySignalAgo == -1 then
+		return DISCARD_RETURN
+	else
+		return OK_RETURN
+	end
+end

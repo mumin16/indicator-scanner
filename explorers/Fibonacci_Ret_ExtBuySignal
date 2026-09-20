@@ -1,0 +1,97 @@
+IN = {
+    Length = 200 -- Lookback period to identify Swing High and Swing Low
+}
+
+SIGNAL = {
+    Fib_0_BreakUpAgo     = -1,
+    Fib_0_BreakDownAgo   = -1,
+    Fib_1000_BreakUpAgo  = -1,
+    Fib_1000_BreakDownAgo= -1
+}
+
+NOTE = "Fib_0 (0.0%) & Fib_1000 (100.0%) Retracement Breakout Explorer Scanner"
+
+local function get_fib_levels(end_idx, length)
+    local start_idx = end_idx - length + 1
+    local max_h = HIGH[start_idx]
+    local min_l = LOW[start_idx]
+    local max_idx = start_idx
+    local min_idx = start_idx
+
+    for i = start_idx + 1, end_idx do
+        if HIGH[i] > max_h then
+            max_h = HIGH[i]
+            max_idx = i
+        end
+        if LOW[i] < min_l then
+            min_l = LOW[i]
+            min_idx = i
+        end
+    end
+
+    local diff = max_h - min_l
+    if diff == 0 then return nil end
+
+    local is_uptrend = min_idx < max_idx
+    local levels = {}
+
+    if is_uptrend then
+        levels.f0   = min_l
+        levels.f100 = max_h
+    else
+        levels.f0   = max_h
+        levels.f100 = min_l
+    end
+
+    return levels
+end
+
+function CALC()
+    local N = #CLOSE
+    if N < IN.Length + 3 then return DISCARD_RETURN end
+
+    SIGNAL.Fib_0_BreakUpAgo     = -1
+    SIGNAL.Fib_0_BreakDownAgo   = -1
+    SIGNAL.Fib_1000_BreakUpAgo  = -1
+    SIGNAL.Fib_1000_BreakDownAgo= -1
+
+    local found_signal = false
+
+    -- Check recent 3 bars (0 = current bar, 1 = 1 bar ago, 2 = 2 bars ago)
+    for i = N, N - 2, -1 do
+        -- Calculate static reference levels prior to bar i (window ending at i - 1)
+        local ref_levels = get_fib_levels(i - 1, IN.Length)
+
+        if ref_levels then
+            local close_curr = CLOSE[i]
+            local close_prev = CLOSE[i - 1]
+            local bar_ago = N - i
+
+            -- Fib 0 (0.0%) Breakouts
+            if SIGNAL.Fib_0_BreakUpAgo == -1 and (close_prev <= ref_levels.f0 and close_curr > ref_levels.f0) then
+                SIGNAL.Fib_0_BreakUpAgo = bar_ago
+                found_signal = true
+            end
+            if SIGNAL.Fib_0_BreakDownAgo == -1 and (close_prev >= ref_levels.f0 and close_curr < ref_levels.f0) then
+                SIGNAL.Fib_0_BreakDownAgo = bar_ago
+                found_signal = true
+            end
+
+            -- Fib 1000 (100.0%) Breakouts
+            if SIGNAL.Fib_1000_BreakUpAgo == -1 and (close_prev <= ref_levels.f100 and close_curr > ref_levels.f100) then
+                SIGNAL.Fib_1000_BreakUpAgo = bar_ago
+                found_signal = true
+            end
+            if SIGNAL.Fib_1000_BreakDownAgo == -1 and (close_prev >= ref_levels.f100 and close_curr < ref_levels.f100) then
+                SIGNAL.Fib_1000_BreakDownAgo = bar_ago
+                found_signal = true
+            end
+        end
+    end
+
+    if not found_signal then
+        return DISCARD_RETURN
+    else
+        return OK_RETURN
+    end
+end

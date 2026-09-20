@@ -1,0 +1,153 @@
+IN = { 
+    PivotLength = 14, 
+    ErrorThreshold = 0.12, 
+    PatternSelect = 0,
+    MaxSignalAgo = 50
+}
+
+SIGNAL = { 
+    GartleyBuySignalAgo   = -1, GartleySellSignalAgo   = -1,
+    BatBuySignalAgo       = -1, BatSellSignalAgo       = -1,
+    AltBatBuySignalAgo    = -1, AltBatSellSignalAgo    = -1,
+    ButterflyBuySignalAgo = -1, ButterflySellSignalAgo = -1,
+    CrabBuySignalAgo      = -1, CrabSellSignalAgo      = -1,
+    DeepCrabBuySignalAgo  = -1, DeepCrabSellSignalAgo  = -1,
+    SharkBuySignalAgo     = -1, SharkSellSignalAgo     = -1,
+    FiveZeroBuySignalAgo  = -1, FiveZeroSellSignalAgo  = -1,
+    ABCDBuySignalAgo      = -1, ABCDSellSignalAgo      = -1,
+    AltABCDBuySignalAgo   = -1, AltABCDSellSignalAgo   = -1
+}
+
+NOTE = "PatternSelect: 0=All, 1=Gartley, 2=Bat, 3=Alt Bat, 4=Butterfly, 5=Crab, 6=Deep Crab, 7=Shark, 8=5-0, 9=AB=CD, 10=Alt AB=CD"
+
+local PATTERN_KEYS = {
+    [1]  = "Gartley",   [2]  = "Bat",       [3]  = "AltBat",
+    [4]  = "Butterfly", [5]  = "Crab",      [6]  = "DeepCrab",
+    [7]  = "Shark",     [8]  = "FiveZero",  [9]  = "ABCD",     [10] = "AltABCD"
+}
+
+local function Len(p1, p2) return math.abs(p2.val - p1.val) end
+local function InRange(val, target, tol) return math.abs(val - target) <= tol end
+local function Between(val, min_val, max_val) return val >= min_val and val <= max_val end
+
+local function Evaluate5PointPattern(X, A, B, C, D, tol)
+    local XA = Len(X, A) local AB = Len(A, B)
+    local BC = Len(B, C) local CD = Len(C, D) local AD = Len(A, D)
+
+    if XA == 0 or AB == 0 or BC == 0 or CD == 0 then return 0, 0 end
+
+    local ab_xa = AB / XA
+    local bc_ab = BC / AB
+    local cd_bc = CD / BC
+    local ad_xa = AD / XA
+
+    local is_std_bullish = (X.val < A.val) and (B.val < A.val) and (B.val > X.val) and (C.val > B.val) and (C.val < A.val) and (D.val < C.val)
+    local is_std_bearish = (X.val > A.val) and (B.val > A.val) and (B.val < X.val) and (C.val < B.val) and (C.val > A.val) and (D.val > C.val)
+
+    local is_shark_bullish = (X.val < A.val) and (B.val < A.val) and (B.val > X.val) and (C.val > A.val) and (D.val < B.val)
+    local is_shark_bearish = (X.val > A.val) and (B.val > A.val) and (B.val < X.val) and (C.val < A.val) and (D.val > B.val)
+
+    if is_std_bullish or is_std_bearish then
+        local dir = is_std_bullish and 1 or -1
+        if InRange(ab_xa, 0.618, tol) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 1.272, 1.618) and InRange(ad_xa, 0.786, tol) then return 1, dir end
+        if Between(ab_xa, 0.382, 0.500) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 1.618, 2.618) and InRange(ad_xa, 0.886, tol) then return 2, dir end
+        if InRange(ab_xa, 0.382, tol) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 2.000, 3.618) and InRange(ad_xa, 1.130, tol) then return 3, dir end
+        if InRange(ab_xa, 0.786, tol) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 1.618, 2.618) and Between(ad_xa, 1.272, 1.618) then return 4, dir end
+        if Between(ab_xa, 0.382, 0.618) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 2.618, 3.618) and InRange(ad_xa, 1.618, tol) then return 5, dir end
+        if InRange(ab_xa, 0.886, tol) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 2.000, 3.618) and InRange(ad_xa, 1.618, tol) then return 6, dir end
+    end
+
+    if is_shark_bullish or is_shark_bearish then
+        local dir = is_shark_bullish and 1 or -1
+        if Between(bc_ab, 1.130, 1.618) and Between(cd_bc, 1.618, 2.240) and Between(ad_xa, 0.886, 1.130) then return 7, dir end
+        if Between(bc_ab, 1.130, 1.618) and Between(cd_bc, 1.618, 2.240) and InRange(cd_bc, 0.500, tol) then return 8, dir end
+    end
+
+    return 0, 0
+end
+
+local function Evaluate4PointPattern(A, B, C, D, tol)
+    local AB = Len(A, B) local BC = Len(B, C) local CD = Len(C, D)
+    if AB == 0 or BC == 0 then return 0, 0 end
+
+    local dir = 0
+    if (A.val > B.val) and (C.val > B.val) and (C.val < A.val) and (D.val < C.val) and (D.val < B.val) then dir = 1
+    elseif (A.val < B.val) and (C.val < B.val) and (C.val > A.val) and (D.val > C.val) and (D.val > B.val) then dir = -1
+    else return 0, 0 end
+
+    local bc_ab = BC / AB local cd_bc = CD / BC local cd_ab = CD / AB
+
+    if Between(bc_ab, 0.618, 0.786) and Between(cd_bc, 1.272, 1.618) and InRange(cd_ab, 1.000, tol) then return 9, dir end
+    if Between(bc_ab, 0.382, 0.886) and (InRange(cd_ab, 0.618, tol) or InRange(cd_ab, 1.272, tol) or InRange(cd_ab, 1.618, tol)) then return 10, dir end
+
+    return 0, 0
+end
+
+function CALC()
+    for _, prefix in pairs(PATTERN_KEYS) do
+        SIGNAL[prefix .. "BuySignalAgo"]  = -1
+        SIGNAL[prefix .. "SellSignalAgo"] = -1
+    end
+
+    local N = #CLOSE
+    if N == 0 then return DISCARD_RETURN end
+
+    local raw_pivots = {}
+    for i = IN.PivotLength + 1, N - IN.PivotLength do
+        local is_high, is_low = true, true
+        for j = i - IN.PivotLength, i + IN.PivotLength do
+            if j ~= i then
+                if HIGH[j] >= HIGH[i] then is_high = false end
+                if LOW[j]  <= LOW[i]  then is_low  = false end
+            end
+        end
+        if is_high then table.insert(raw_pivots, { idx = i - 1, val = HIGH[i], isHigh = true })
+        elseif is_low then table.insert(raw_pivots, { idx = i - 1, val = LOW[i], isHigh = false }) end
+    end
+
+    local pivots = {}
+    for _, p in ipairs(raw_pivots) do
+        if #pivots == 0 then table.insert(pivots, p)
+        else
+            local last = pivots[#pivots]
+            if last.isHigh == p.isHigh then
+                if (p.isHigh and p.val > last.val) or (not p.isHigh and p.val < last.val) then pivots[#pivots] = p end
+            else table.insert(pivots, p) end
+        end
+    end
+
+    local numPivots = #pivots
+    if numPivots < 4 then return DISCARD_RETURN end
+
+    local hasSignal = false
+    local record_signal = function(pat_id, dir, d_idx)
+        local key_prefix = PATTERN_KEYS[pat_id]
+        if not key_prefix then return end
+        local barsAgo = (N - 1) - d_idx
+        if barsAgo <= IN.MaxSignalAgo then
+            local sigKey = key_prefix .. (dir == 1 and "BuySignalAgo" or "SellSignalAgo")
+            if SIGNAL[sigKey] == -1 or barsAgo < SIGNAL[sigKey] then
+                SIGNAL[sigKey] = barsAgo
+                hasSignal = true
+            end
+        end
+    end
+
+    if numPivots >= 5 then
+        for i = numPivots - 4, 1, -1 do
+            local pat_id, dir = Evaluate5PointPattern(pivots[i], pivots[i+1], pivots[i+2], pivots[i+3], pivots[i+4], IN.ErrorThreshold)
+            if pat_id > 0 and (IN.PatternSelect == 0 or IN.PatternSelect == pat_id) then
+                record_signal(pat_id, dir, pivots[i+4].idx)
+            end
+        end
+    end
+
+    for i = numPivots - 3, 1, -1 do
+        local pat_id, dir = Evaluate4PointPattern(pivots[i], pivots[i+1], pivots[i+2], pivots[i+3], IN.ErrorThreshold)
+        if pat_id > 0 and (IN.PatternSelect == 0 or IN.PatternSelect == pat_id) then
+            record_signal(pat_id, dir, pivots[i+3].idx)
+        end
+    end
+
+    if hasSignal then return OK_RETURN else return DISCARD_RETURN end
+end

@@ -1,0 +1,164 @@
+IN = {
+    Length   = 200,
+    Mult     = 1.0,
+    FiltType = 0 -- 0=SMA, 1=EMA, 2=LWMA, 3=ALMA, 4=VWMA, 5=RMA
+}
+
+SIGNAL = {
+    Upper2_BreakUpAgo   = -1,
+    Upper2_BreakDownAgo = -1,
+    Lower2_BreakUpAgo   = -1,
+    Lower2_BreakDownAgo = -1
+}
+
+NOTE = "Upper2Channel (+2.0 SD) & Lower2Channel (-2.0 SD) Breakout Explorer Scanner"
+
+local function calc_filter(data, n, length, f_type)
+    if f_type == 1 then
+        -- EMA
+        local alpha = 2.0 / (length + 1)
+        local ema = data[n - length + 1]
+        for i = n - length + 2, n do
+            ema = (data[i] - ema) * alpha + ema
+        end
+        return ema
+
+    elseif f_type == 2 then
+        -- LWMA
+        local num_sum, den_sum = 0.0, 0.0
+        for i = 0, length - 1 do
+            local w = length - i
+            num_sum = num_sum + w * data[n - i]
+            den_sum = den_sum + w
+        end
+        return num_sum / den_sum
+
+    elseif f_type == 3 then
+        -- ALMA
+        local m = 0.85 * (length - 1)
+        local s = length / 6.0
+        local wtsum, cumwt = 0.0, 0.0
+        for i = 0, length - 1 do
+            local wt = math.exp(-((i - m) ^ 2) / (2 * (s ^ 2)))
+            wtsum = wtsum + wt * data[n - length + 1 + i]
+            cumwt = cumwt + wt
+        end
+        return wtsum / cumwt
+
+    elseif f_type == 4 and VOLUME then
+        -- VWMA
+        local vpsum, vsum = 0.0, 0.0
+        for i = n - length + 1, n do
+            local vol = (VOLUME[i] and VOLUME[i] > 0) and VOLUME[i] or 1.0
+            vpsum = vpsum + data[i] * vol
+            vsum  = vsum + vol
+        end
+        return vsum > 0 and (vpsum / vsum) or data[n]
+
+    elseif f_type == 5 then
+        -- RMA / SMMA
+        local alpha = 1.0 / length
+        local rma = data[n - length + 1]
+        for i = n - length + 2, n do
+            rma = alpha * data[i] + (1 - alpha) * rma
+        end
+        return rma
+
+    else
+        -- SMA
+        local sum = 0.0
+        for i = n - length + 1, n do
+            sum = sum + data[i]
+        end
+        return sum / length
+    end
+end
+
+local function get_channel_levels(n, length, mult, f_type)
+    local mean_x = (length - 1) / 2.0
+    local var_x  = (length * length - 1) / 12.0
+
+    local mean_y = calc_filter(CLOSE, n, length, f_type)
+
+    local cov_xy = 0.0
+    for i = 0, length - 1 do
+        cov_xy = cov_xy + (i - mean_x) * (CLOSE[n - length + 1 + i] - mean_y)
+    end
+    cov_xy = cov_xy / length
+
+    local slope = cov_xy / var_x
+
+    local sum_sq_res = 0.0
+    for i = 0, length - 1 do
+        local y_pred = (mean_y - slope * mean_x) + slope * i
+        local res = CLOSE[n - length + 1 + i] - y_pred
+        sum_sq_res = sum_sq_res + res * res
+    end
+    local std_dev = math.sqrt(sum_sq_res / length) * mult
+
+    -- Center line level at bar `n` (length - 1) and bar `n - 1` (length - 2)
+    local y_curr_mid = mean_y + slope * (length - 1 - mean_x)
+    local y_prev_mid = mean_y + slope * (length - 2 - mean_x)
+
+    -- Upper2Channel (+2.0 StdDev) Current & Previous
+    local u2_curr = y_curr_mid + std_dev * 2.0
+    local u2_prev = y_prev_mid + std_dev * 2.0
+
+    -- Lower2Channel (-2.0 StdDev) Current & Previous
+    local l2_curr = y_curr_mid - std_dev * 2.0
+    local l2_prev = y_prev_mid - std_dev * 2.0
+
+    return u2_curr, u2_prev, l2_curr, l2_prev
+end
+
+function CALC()
+    local N = #CLOSE
+    if N < IN.Length + 1 then return DISCARD_RETURN end
+
+    SIGNAL.Upper2_BreakUpAgo   = -1
+    SIGNAL.Upper2_BreakDownAgo = -1
+    SIGNAL.Lower2_BreakUpAgo   = -1
+    SIGNAL.Lower2_BreakDownAgo = -1
+
+    local found_signal = false
+
+    -- Check recent 3 bars (0 = current bar, 1 = 1 bar ago, 2 = 2 bars ago)
+    for i = N, N - 2, -1 do
+        if i < IN.Length + 1 then break end
+
+        local u2_curr, u2_prev, l2_curr, l2_prev = get_channel_levels(i, IN.Length, IN.Mult, IN.FiltType)
+
+        local close_curr = CLOSE[i]
+        local close_prev = CLOSE[i - 1]
+
+        local bar_ago = N - i
+
+        -- Upper2Channel (+2.0 StdDev) Breakouts
+        if SIGNAL.Upper2_BreakUpAgo == -1 and (close_prev <= u2_prev and close_curr > u2_curr) then
+            SIGNAL.Upper2_BreakUpAgo = bar_ago
+            found_signal = true
+        end
+
+        if SIGNAL.Upper2_BreakDownAgo == -1 and (close_prev >= u2_prev and close_curr < u2_curr) then
+            SIGNAL.Upper2_BreakDownAgo = bar_ago
+            found_signal = true
+        end
+
+        -- Lower2Channel (-2.0 StdDev) Breakouts
+        if SIGNAL.Lower2_BreakUpAgo == -1 and (close_prev <= l2_prev and close_curr > l2_curr) then
+            SIGNAL.Lower2_BreakUpAgo = bar_ago
+            found_signal = true
+        end
+
+        if SIGNAL.Lower2_BreakDownAgo == -1 and (close_prev >= l2_prev and close_curr < l2_curr) then
+            SIGNAL.Lower2_BreakDownAgo = bar_ago
+            found_signal = true
+        end
+    end
+
+    if not found_signal then
+        return DISCARD_RETURN
+    else
+        return OK_RETURN
+    end
+end

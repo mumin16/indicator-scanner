@@ -1,0 +1,29 @@
+IN = { Period = 100, Smooth = 14 }
+SIGNAL = { BuySignalAgo = -1 }
+NOTE = "Larry Williams' Percent Range and Hull Moving Average Buy Signal Scan"
+
+function CALC()
+	local WPr = WPR(IN.Period)
+	local WPrAvg = HMA(WPr, IN.Smooth)
+
+	if #WPrAvg < 2 then return DISCARD_RETURN end
+
+	local diff = #CLOSE - #WPrAvg
+
+
+	for i = #WPrAvg, #WPrAvg - 2, -1 do
+		if WPrAvg[i] > -80 and WPrAvg[i - 1] < -80 then
+			SIGNAL.BuySignalAgo = #CLOSE - i - diff
+			break
+		else
+			SIGNAL.BuySignalAgo = -1
+		end
+	end
+
+
+	if SIGNAL.BuySignalAgo == -1 then
+		return DISCARD_RETURN
+	else
+		return OK_RETURN
+	end
+end

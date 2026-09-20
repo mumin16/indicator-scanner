@@ -1,0 +1,27 @@
+IN = {
+	BarsAmount = 500
+}
+SIGNAL = { SignalAgo = -1 }
+NOTE = "Price cross AVWAP's band is Signal, The meaning of 0, all series."
+
+function CALC()
+	local _, Upband1, _, Upband2, _, Upband3, _ = AVWAP(IN.BarsAmount)
+
+	
+		if (CLOSE[#CLOSE] > Upband3[#Upband3] and CLOSE[#CLOSE - 1] < Upband3[#Upband3 - 1]) 
+    or (CLOSE[#CLOSE] > Upband2[#Upband2] and CLOSE[#CLOSE - 1] < Upband2[#Upband2 - 1]) 
+    or (CLOSE[#CLOSE] > Upband1[#Upband1] and CLOSE[#CLOSE - 1] < Upband1[#Upband1 - 1]) 
+    then SIGNAL.SignalAgo = 0
+		else
+			SIGNAL.SignalAgo = -1
+		end
+	
+
+
+	if SIGNAL.SignalAgo == -1 then
+		return DISCARD_RETURN
+	else
+		return OK_RETURN
+	end
+  
+end

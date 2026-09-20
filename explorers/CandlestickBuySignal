@@ -1,0 +1,36 @@
+SIGNAL = { Marubozu = -1, Doji = -1, Hammer = -1, Harami = -1, Engulfing = -1 , MorningStar=-1}
+NOTE = "Candlestick patterns buy signal scan"
+
+function CALC()
+  if #CLOSE<3 then return DISCARD_RETURN end
+
+  for i = #CLOSE, #CLOSE, -1 do
+    if OPEN[i] == LOW[i] and CLOSE[i] == HIGH[i] and HIGH[i] > LOW[i] then SIGNAL.Marubozu = #CLOSE - i else SIGNAL.Marubozu = -1 end
+
+    if OPEN[i] == CLOSE[i] and HIGH[i] > LOW[i] and CLOSE[i] > LOW[i] and CLOSE[i] < HIGH[i] then SIGNAL.Doji = #CLOSE -
+      i else SIGNAL.Doji = -1 end
+
+    if (CLOSE[i] == HIGH[i] and OPEN[i] > LOW[i] and CLOSE[i] > OPEN[i]) or
+        (OPEN[i] == LOW[i] and HIGH[i] > CLOSE[i] and CLOSE[i] > OPEN[i])
+    then
+      SIGNAL.Hammer = #CLOSE - i
+    else
+      SIGNAL.Hammer = -1
+    end
+
+    if CLOSE[i]>(CLOSE[i - 1] + OPEN[i - 1])/2 and CLOSE[i - 1] < OPEN[i - 1] and CLOSE[i] > OPEN[i] and HIGH[i] < HIGH[i - 1] and LOW[i] > LOW[i - 1] and OPEN[i] > CLOSE[i - 1] and CLOSE[i] < OPEN[i - 1] and OPEN[i] > LOW[i] then SIGNAL.Harami = #
+      CLOSE - i else SIGNAL.Harami = -1 end
+
+    if CLOSE[i - 1] < OPEN[i - 1] and CLOSE[i] > OPEN[i] and HIGH[i] > HIGH[i - 1] and LOW[i] < LOW[i - 1] and CLOSE[i] > OPEN[i - 1] and OPEN[i] < CLOSE[i - 1] and OPEN[i] > LOW[i] and CLOSE[i] < HIGH[i] then SIGNAL.Engulfing = #
+      CLOSE - i else SIGNAL.Engulfing = -1 end
+
+    if CLOSE[i - 2] < OPEN[i - 2] and 
+    CLOSE[i-1]>OPEN[i-1] and OPEN[i-1]<CLOSE[i - 2] and CLOSE[i-1]<CLOSE[i - 2] and LOW[i-1]<LOW[i - 2] and 
+    CLOSE[i]>OPEN[i] and CLOSE[i] > CLOSE[i - 1] and OPEN[i] > CLOSE[i - 1] and HIGH[i] < HIGH[i - 2] and CLOSE[i] < OPEN[i - 2] then SIGNAL.MorningStarg = #
+      CLOSE - i else SIGNAL.MorningStar = -1 end      
+  end
+
+
+  if SIGNAL.Marubozu == -1 and SIGNAL.Doji == -1 and SIGNAL.Hammer == -1 and SIGNAL.Harami == -1 and SIGNAL.Engulfing == -1 and SIGNAL.MorningStar == -1 then return
+    DISCARD_RETURN else return OK_RETURN end
+end

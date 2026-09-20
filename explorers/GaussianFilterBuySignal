@@ -1,0 +1,24 @@
+IN = { length = 14, sigma = 4 }
+SIGNAL = { BuySignalAgo = -1 }
+NOTE = "Gaussian Filter Buy Signal Scan"
+
+
+function CALC()
+	local Gauss, _ = gaussian_filter(CLOSE, IN.length, IN.sigma)
+	if #Gauss < 3 then return DISCARD_RETURN end
+
+	for i = #Gauss, #Gauss - 2, -1 do
+		if Gauss[i] > Gauss[i - 1] and Gauss[i - 1] < Gauss[i - 2] then
+			SIGNAL.BuySignalAgo = #Gauss - i
+			break
+		else
+			SIGNAL.BuySignalAgo = -1
+		end
+	end
+
+	if SIGNAL.BuySignalAgo == -1 then
+		return DISCARD_RETURN
+	else
+		return OK_RETURN
+	end
+end

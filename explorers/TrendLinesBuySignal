@@ -1,0 +1,206 @@
+IN = {
+    Length = 14,
+    Mult = 1.0,
+    CalcMethod = 0, -- 0 = ATR, 1 = StDev, 2 = LinReg
+    MaxSignalAgo = 10
+}
+
+SIGNAL = {
+    BuySignalAgo  = -1, -- Bars ago for Upper Trendline Breakout (Bullish)
+    SellSignalAgo = -1  -- Bars ago for Lower Trendline Breakout (Bearish)
+}
+
+NOTE = "Trendlines Breakout Explorer\nCalcMethod: 0=ATR, 1=StDev, 2=LinReg"
+
+function TrendlinesBreakouts(length, mult, calcMethod)
+    local N = #CLOSE
+    if N == 0 then
+        return {}, {}
+    end
+
+    local up_break = {}
+    local dn_break = {}
+
+    for i = 1, N do
+        up_break[i] = 0
+        dn_break[i] = 0
+    end
+
+    local tr        = {}
+    local sum_tr    = 0.0
+    local sum_src   = 0.0
+    local sum_src2  = 0.0
+    local sum_src_n = 0.0
+    local var_n     = (length * length - 1) / 12.0
+
+    local active_ph    = false
+    local ph_start_bar = 0
+    local ph_start_val = 0.0
+    local slope_ph     = 0.0
+
+    local active_pl    = false
+    local pl_start_bar = 0
+    local pl_start_val = 0.0
+    local slope_pl     = 0.0
+
+    local upos = 0
+    local dnos = 0
+
+    for n = 1, N do
+        local src = CLOSE[n]
+
+        -- 1. True Range Calculation
+        if n == 1 then
+            tr[n] = HIGH[1] - LOW[1]
+        else
+            local h_l  = HIGH[n] - LOW[n]
+            local h_pc = math.abs(HIGH[n] - CLOSE[n - 1])
+            local l_pc = math.abs(LOW[n] - CLOSE[n - 1])
+            tr[n] = math.max(h_l, math.max(h_pc, l_pc))
+        end
+
+        -- 2. Rolling Window Accumulators
+        sum_tr    = sum_tr + tr[n]
+        sum_src   = sum_src + src
+        sum_src2  = sum_src2 + (src * src)
+        sum_src_n = sum_src_n + (src * n)
+
+        if n > length then
+            local prev_src = CLOSE[n - length]
+            sum_tr    = sum_tr - tr[n - length]
+            sum_src   = sum_src - prev_src
+            sum_src2  = sum_src2 - (prev_src * prev_src)
+            sum_src_n = sum_src_n - (prev_src * (n - length))
+        end
+
+        -- 3. Dynamic Slope Calculation
+        local slope = 0.0
+        if n >= length then
+            if calcMethod == 0 then
+                local atr = sum_tr / length
+                slope = (atr / length) * mult
+            elseif calcMethod == 1 then
+                local mean = sum_src / length
+                local variance = (sum_src2 / length) - (mean * mean)
+                if variance < 0 then variance = 0 end
+                slope = (math.sqrt(variance) / length) * mult
+            elseif calcMethod == 2 then
+                local mean_src   = sum_src / length
+                local mean_n     = n - (length - 1) / 2.0
+                local mean_src_n = sum_src_n / length
+                local cov        = mean_src_n - (mean_src * mean_n)
+                local linreg_slope = cov / var_n
+                slope = (math.abs(linreg_slope) / 2.0) * mult
+            end
+        end
+
+        -- 4. Pivot High / Pivot Low Detection
+        local ph = nil
+        local pl = nil
+        local pivot_idx = n - length
+
+        if pivot_idx > length and pivot_idx + length <= N then
+            local p_high = HIGH[pivot_idx]
+            local p_low  = LOW[pivot_idx]
+            local is_ph  = true
+            local is_pl  = true
+
+            for j = pivot_idx - length, pivot_idx + length do
+                if j ~= pivot_idx then
+                    if HIGH[j] >= p_high then is_ph = false end
+                    if LOW[j]  <= p_low  then is_pl = false end
+                end
+            end
+
+            if is_ph then ph = p_high end
+            if is_pl then pl = p_low  end
+        end
+
+        -- 5. Upper Trendline Projection
+        if ph then
+            active_ph    = true
+            slope_ph     = slope
+            ph_start_bar = pivot_idx - 1 -- Convert 1-based index to 0-based bar index
+            ph_start_val = ph
+        end
+
+        local upper_level = 0.0
+        if active_ph then
+            upper_level = ph_start_val - slope_ph * ((n - 1) - ph_start_bar)
+        end
+
+        -- 6. Lower Trendline Projection
+        if pl then
+            active_pl    = true
+            slope_pl     = slope
+            pl_start_bar = pivot_idx - 1 -- Convert 1-based index to 0-based bar index
+            pl_start_val = pl
+        end
+
+        local lower_level = 0.0
+        if active_pl then
+            lower_level = pl_start_val + slope_pl * ((n - 1) - pl_start_bar)
+        end
+
+        -- 7. Breakout Signal Tracking
+        local prev_upos = upos
+        local prev_dnos = dnos
+
+        if ph then
+            upos = 0
+        elseif active_ph and CLOSE[n] > upper_level then
+            upos = 1
+        end
+
+        if pl then
+            dnos = 0
+        elseif active_pl and CLOSE[n] < lower_level then
+            dnos = 1
+        end
+
+        if upos > prev_upos then
+            up_break[n] = LOW[n]
+        end
+
+        if dnos > prev_dnos then
+            dn_break[n] = HIGH[n]
+        end
+    end
+
+    return up_break, dn_break
+end
+
+function CALC()
+    SIGNAL.BuySignalAgo  = -1
+    SIGNAL.SellSignalAgo = -1
+
+    local N = #CLOSE
+    if N == 0 then
+        return DISCARD_RETURN
+    end
+
+    local up_break, dn_break = TrendlinesBreakouts(IN.Length, IN.Mult, IN.CalcMethod)
+
+    local startIdx = math.max(1, N - IN.MaxSignalAgo)
+    local hasSignal = false
+
+    for i = N, startIdx, -1 do
+        local barsAgo = N - i
+
+        if up_break[i] ~= 0 and SIGNAL.BuySignalAgo == -1 then
+            SIGNAL.BuySignalAgo = barsAgo
+            hasSignal = true
+        end
+
+        if dn_break[i] ~= 0 and SIGNAL.SellSignalAgo == -1 then
+            SIGNAL.SellSignalAgo = barsAgo
+            hasSignal = true
+        end
+    end
+
+    if hasSignal then
+        return OK_RETURN
+    else
+        return DISCARD_RETURN
+    end
+end

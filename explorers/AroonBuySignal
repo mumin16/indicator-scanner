@@ -1,0 +1,26 @@
+IN = { Period = 14 }
+SIGNAL = { BuySignalAgo = -1 }
+NOTE = "Aroon Signal Scan"
+
+function CALC()
+	local AroonUp, AroonDown = AROON(IN.Period)
+	if #AroonUp < 3 then return DISCARD_RETURN end
+
+	local diff = #CLOSE - #AroonUp
+
+	for i = #AroonUp, #AroonUp - 2, -1 do
+		if AroonUp[i] > AroonDown[i] and AroonUp[i - 1] < AroonDown[i - 1] and AroonUp[#AroonUp] > AroonDown[#AroonUp] then
+			SIGNAL.BuySignalAgo = #CLOSE - i - diff
+			break
+		else
+			SIGNAL.BuySignalAgo = -1
+		end
+	end
+
+
+	if SIGNAL.BuySignalAgo == -1 then
+		return DISCARD_RETURN
+	else
+		return OK_RETURN
+	end
+end

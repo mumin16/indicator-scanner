@@ -1,0 +1,35 @@
+IN = { tenkan_period = 9, kijun_period = 26, senkou_period = 52 }
+SIGNAL = { BuySignalAgo = -1 }
+NOTE = "Ichimoku2 SpanA SpanB CrossOver"
+
+
+function CALC()
+
+
+local SpanA,SpanB,_,_=Ichimoku(IN.tenkan_period , IN.kijun_period , IN.senkou_period  )
+
+  if #SpanA < 3 or #SpanB < 3 then return DISCARD_RETURN end
+
+
+
+  for i = 0, 3, 1 do
+    if (SpanA[#SpanA - i] > SpanB[#SpanB - i] and SpanA[#SpanA - i - 1] < SpanB[#SpanB - i - 1] 
+    and CLOSE[#CLOSE] > SpanB[#SpanB] and CLOSE[#CLOSE] > SpanA[#SpanA])
+        or
+    (SpanA[#SpanA - i] > SpanB[#SpanB - i] and CLOSE[#CLOSE - i] > SpanA[#SpanA - i] and CLOSE[#CLOSE - i - 1] < SpanA[#SpanA - i - 1])
+    then
+      SIGNAL.BuySignalAgo = i
+      break
+    else
+      SIGNAL.BuySignalAgo = -1
+    end
+  end
+
+
+
+  if SIGNAL.BuySignalAgo == -1 then
+    return DISCARD_RETURN
+  else
+    return OK_RETURN
+  end
+end

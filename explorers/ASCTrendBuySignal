@@ -1,0 +1,24 @@
+IN = { ASClength = 15, RISK = 15 }
+SIGNAL = { BuySignalAgo = -1 }
+NOTE = "ASCTrend Buy Signal Scan"
+
+
+function CALC()
+	local trend, _, _ = ASCTrend(IN.ASClength, IN.RISK)
+
+
+	for i = #trend, #trend - 2, -1 do
+		if (trend[i] == 1 and trend[i - 1] == -1) then
+			SIGNAL.BuySignalAgo = #trend - i
+			break
+		else
+			SIGNAL.BuySignalAgo = -1
+		end
+	end
+
+	if SIGNAL.BuySignalAgo == -1 then
+		return DISCARD_RETURN
+	else
+		return OK_RETURN
+	end
+end

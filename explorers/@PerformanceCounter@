@@ -1,0 +1,7 @@
+SIGNAL = { FullPerf = 0, QuarterPerf = 0 }
+NOTE = "Performance Counter"
+
+function CALC()
+	SIGNAL.FullPerf, SIGNAL.QuarterPerf = PERFORMANCE(HIGH,LOW)
+	return OK_RETURN
+end
