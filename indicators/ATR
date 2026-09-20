@@ -1,0 +1,8 @@
+SEPARATEWINDOW = true
+IN = { Period = 14 }
+OUT = { Atr = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+NOTE = "Average True Range"
+
+function CALC()
+  OUT.Atr = ATR(IN.Period)
+end

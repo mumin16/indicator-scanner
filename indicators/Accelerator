@@ -1,0 +1,7 @@
+SEPARATEWINDOW = true
+OUT = { Ac = { DRAW_HISTOGRAM, "Color", SHIFT_NONE } }
+NOTE = "Accelerator/Decelerator"
+
+function CALC()
+  OUT.Ac, OUT.Color = AC()
+end

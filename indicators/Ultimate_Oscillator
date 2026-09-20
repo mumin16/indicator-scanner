@@ -1,0 +1,16 @@
+SEPARATEWINDOW = true
+IN = {
+        FastPeriod = 7,
+        MiddlePeriod = 14,
+        SlowPeriod = 28,
+        FastK = 4,
+        MiddleK = 2,
+        SlowK = 1
+}
+OUT = { UO = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+LEVELS = { 30, 70 }
+NOTE = "Ultimate Oscillator"
+
+function CALC()
+        OUT.UO = UltimateOsc(IN.FastPeriod, IN.MiddlePeriod, IN.SlowPeriod, IN.FastK, IN.MiddleK, IN.SlowK)
+end

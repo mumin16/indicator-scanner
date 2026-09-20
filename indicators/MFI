@@ -1,0 +1,9 @@
+SEPARATEWINDOW = true
+IN = { Period = 14 }
+OUT = { Mfi = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+LEVELS = { 20, 80 }
+NOTE = "Money Flow Index"
+
+function CALC()
+  OUT.Mfi = MFI(IN.Period)
+end

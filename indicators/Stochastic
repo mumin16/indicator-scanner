@@ -1,0 +1,16 @@
+SEPARATEWINDOW = true
+IN = {
+  KPeriod = 10,
+  Slowing = 6,
+  DPeriod = 6
+}
+OUT = {
+  Stoch = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  StochSignal = { DRAW_DASHEDLINE, CLR_RED, SHIFT_NONE }
+}
+LEVELS = { 20, 80 }
+NOTE = "Stochastic Oscillator (%K Main & %D Signal)"
+
+function CALC()
+  OUT.Stoch,OUT.StochSignal = STOCHASTIC(IN.KPeriod, IN.Slowing,IN.DPeriod)
+end

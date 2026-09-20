@@ -1,0 +1,45 @@
+SEPARATEWINDOW = false
+IN = {
+	JawsPeriod = 13,
+	JawsShift = 0,
+	TeethPeriod = 8,
+	TeethShift = 0,
+	LipsPeriod = 5,
+	LipsShift = 0,
+	MaType = 2,
+	PriceType = 4
+}
+OUT = {
+	Jaws = { DRAW_LINE, CLR_BLUE, 8 },
+	Teeth = { DRAW_LINE, CLR_RED, 5 },
+	Lips = { DRAW_LINE, CLR_GREEN, 3 }
+}
+
+NOTE =
+"PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6 - MaType can be sma=0 ema=1 smma=2 lwma=3"
+
+function CALC()
+	if IN.MaType == 0 then
+		OUT.Jaws = SMA(IN.PriceType, IN.JawsPeriod)
+		OUT.Teeth = SMA(IN.PriceType, IN.TeethPeriod)
+		OUT.Lips = SMA(IN.PriceType, IN.LipsPeriod)
+	end
+
+	if IN.MaType == 1 then
+		OUT.Jaws = EMA(IN.PriceType, IN.JawsPeriod)
+		OUT.Teeth = EMA(IN.PriceType, IN.TeethPeriod)
+		OUT.Lips = EMA(IN.PriceType, IN.LipsPeriod)
+	end
+
+	if IN.MaType == 2 then
+		OUT.Jaws = SMMA(IN.PriceType, IN.JawsPeriod)
+		OUT.Teeth = SMMA(IN.PriceType, IN.TeethPeriod)
+		OUT.Lips = SMMA(IN.PriceType, IN.LipsPeriod)
+	end
+
+	if IN.MaType == 3 then
+		OUT.Jaws = LWMA(IN.PriceType, IN.JawsPeriod)
+		OUT.Teeth = LWMA(IN.PriceType, IN.TeethPeriod)
+		OUT.Lips = LWMA(IN.PriceType, IN.LipsPeriod)
+	end
+end

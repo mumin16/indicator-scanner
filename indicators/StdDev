@@ -1,0 +1,13 @@
+SEPARATEWINDOW = true
+IN = {
+  Period = 20,
+  PriceType = 0,
+  MaType = 0
+}
+OUT = { StdDev = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+NOTE =
+"Standard Deviation - PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6 - MaType can be Sma=0 Ema=1 Smma=2 Lwma=3"
+
+function CALC()
+  OUT.StdDev = STDDEV(IN.PriceType, IN.Period, IN.MaType)
+end

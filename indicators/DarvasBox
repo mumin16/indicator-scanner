@@ -1,0 +1,9 @@
+SEPARATEWINDOW = false
+IN = { Length = 5 }
+OUT = { TopBox = { DRAW_LINE, CLR_GREEN, SHIFT_NONE }, BottomBox = { DRAW_LINE, CLR_RED, SHIFT_NONE } }
+NOTE = "2026 Musavir"
+
+
+function CALC()
+     OUT.TopBox, OUT.BottomBox = DARVAS(HIGH, LOW, IN.Length)
+end

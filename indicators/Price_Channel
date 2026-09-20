@@ -1,0 +1,14 @@
+SEPARATEWINDOW = false
+IN = { Period = 22 }
+OUT = {
+  ChannelUp = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  ChannelLow = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  ChannelMid = { DRAW_DASHEDLINE, CLR_GREEN, SHIFT_NONE }
+}
+NOTE = "2022 Musavir"
+
+function CALC()
+  OUT.ChannelUp = PCUP(IN.Period)
+  OUT.ChannelLow = PCDOWN(IN.Period)
+  OUT.ChannelMid = PCMID(IN.Period)
+end

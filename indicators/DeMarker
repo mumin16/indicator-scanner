@@ -1,0 +1,9 @@
+SEPARATEWINDOW = true
+IN = { Period = 14 }
+OUT = { Demarker = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+LEVELS = { 0.3, 0.7 }
+NOTE = "2022 Musavir"
+
+function CALC()
+  OUT.Demarker = DEMARKER(IN.Period)
+end

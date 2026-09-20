@@ -1,0 +1,9 @@
+SEPARATEWINDOW = false
+IN ={ ASClength = 15, RISK =15}
+OUT={asctrend={DRAW_POINT,"Color",SHIFT_NONE}}
+
+NOTE = "ASCTrend"
+
+function CALC()
+    _,OUT.asctrend, OUT.Color = ASCTrend(IN.ASClength, IN.RISK)
+end

@@ -1,0 +1,7 @@
+SEPARATEWINDOW = true
+OUT = { Pvt = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+NOTE = "Price and Volume Trend"
+
+function CALC()
+  OUT.Pvt = PVT()
+end

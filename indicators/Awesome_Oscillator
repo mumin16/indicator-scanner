@@ -1,0 +1,7 @@
+SEPARATEWINDOW = true
+OUT = { Ao = { DRAW_HISTOGRAM, "Color", SHIFT_NONE } }
+NOTE = "Awesome Oscillator"
+
+function CALC()
+  OUT.Ao, OUT.Color = AO()
+end

@@ -1,0 +1,24 @@
+SEPARATEWINDOW = false
+IN = { BarsAmount = 500 }
+
+OUT = {
+  Avwap = { DRAW_LINE, CLR_BLUE, SHIFT_NONE }
+  ,
+  Upband1 = { DRAW_LINE, CLR_GREEN, SHIFT_NONE }
+  ,
+  Downband1 = { DRAW_LINE, CLR_GREEN, SHIFT_NONE }
+  ,
+  Upband2 = { DRAW_LINE, CLR_YELLOW, SHIFT_NONE }
+  ,
+  Downband2 = { DRAW_LINE, CLR_YELLOW, SHIFT_NONE }
+  ,
+  Upband3 = { DRAW_LINE, CLR_RED, SHIFT_NONE }
+  ,
+  Downband3 = { DRAW_LINE, CLR_RED, SHIFT_NONE }
+}
+NOTE = "Anchored Volume Weighted Average Price. The meaning of 0, all series."
+
+
+function CALC()
+  OUT.Avwap, OUT.Upband1, OUT.Downband1, OUT.Upband2, OUT.Downband2, OUT.Upband3, OUT.Downband3 = AVWAP(IN.BarsAmount)
+end

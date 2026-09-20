@@ -1,0 +1,29 @@
+SEPARATEWINDOW = true
+IN = {
+  BBPeriod = 12,
+  BBDevition = 2,
+  FastEma = 6,
+  SlowEma = 12,
+  MacdSma = 6,
+  PriceType = 6
+}
+OUT = {
+  Signal = { DRAW_POINT, "Color", SHIFT_NONE },
+  BandUp = { DRAW_LINE, CLR_GREY, SHIFT_NONE },
+  BandDown = { DRAW_LINE, CLR_GREY, SHIFT_NONE },
+  Sma = { DRAW_DASHEDLINE, CLR_GREY, SHIFT_NONE }
+}
+LEVELS = { 0 }
+NOTE = "PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+  OUT.Signal = SMA(MACD(IN.PriceType, IN.FastEma, IN.SlowEma), IN.MacdSma)
+  OUT.Sma, OUT.BandUp, OUT.BandDown = BollingerBands(OUT.Signal, IN.BBPeriod, IN.BBDevition)
+
+
+  OUT.Color = {}
+  OUT.Color[1] = CLR_GREEN
+  for i = 1, #OUT.Signal, 1 do
+    if i ~= 1 and OUT.Signal[i] > OUT.Signal[i - 1] then OUT.Color[i] = CLR_GREEN else OUT.Color[i] = CLR_RED end
+  end
+end

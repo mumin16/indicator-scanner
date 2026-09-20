@@ -1,0 +1,11 @@
+SEPARATEWINDOW = false
+IN = {
+  Period = 5,
+  Multiplier = 2
+}
+OUT = { SuperTrend = { DRAW_LINE, "Color", SHIFT_NONE } }
+NOTE = "Super Trend"
+
+function CALC()
+  OUT.SuperTrend, OUT.Color = SUPERTREND(IN.Period, IN.Multiplier)
+end

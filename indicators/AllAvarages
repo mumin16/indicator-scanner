@@ -1,0 +1,659 @@
+SEPARATEWINDOW = false
+IN = {Period = 14,ApplyTo = PRICE_CLOSE,MaMode = 15}
+OUT = { Ma = { DRAW_LINE, "Color", SHIFT_NONE } }
+
+NOTE = "36 Moving Averages: \n" ..
+    "[0] = sma,        [1] = ema,        [2] = wilder,     [3] = lwma,\n" ..
+    "[4] = sinewma,    [5] = trima,      [6] = lsma,       [7] = smma,\n" ..
+    "[8] = hma,        [9] = zerolagema, [10] = dema,      [11] = t3_basic,\n" ..
+    "[12] = itrend,    [13] = median,    [14] = geomean,   [15] = rema,\n" ..
+    "[16] = ilrs,      [17] = ie_2,      [18] = trimagen,  [19] = vwma,\n" ..
+    "[20] = jsmooth,   [21] = sma_eq,    [22] = alma,      [23] = tema,\n" ..
+    "[24] = t3,        [25] = laguerre,  [26] = md,        [27] = bf2p,\n" ..
+    "[28] = bf3p,      [29] = supersmu,  [30] = decycler,  [31] = evwma,\n" ..
+    "[32] = ewma,      [33] = dsema,     [34] = tsema,     [35] = vema\n" ..
+    "ApplyTo can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+
+-- ============================================================================
+-- Lua 5.1 Moving Averages Library returning full result arrays
+-- ============================================================================
+
+
+
+-- Helper: Sum of array slice
+local function sum(p, start_idx, end_idx)
+    local s = 0
+    for i = start_idx, end_idx do s = s + (p[i] or 0) end
+    return s
+end
+
+-- 0: SMA - Simple Moving Average
+function sma(p, n)
+    local out = {}
+    for i = 1, #p do
+        if i < n then
+            out[i] = p[i]
+        else
+            out[i] = sum(p, i - n + 1, i) / n
+        end
+    end
+    return out
+end
+
+-- 1: EMA - Exponential Moving Average
+function ema(p, n)
+    local out = {}
+    local alpha = 2 / (n + 1)
+    out[1] = p[1] or 0
+    for i = 2, #p do
+        out[i] = alpha * p[i] + (1 - alpha) * out[i-1]
+    end
+    return out
+end
+
+-- 2: Wilder - Wilder's Smoothing
+function wilder(p, n)
+    local out = {}
+    local alpha = 1 / n
+    out[1] = p[1] or 0
+    for i = 2, #p do
+        out[i] = alpha * p[i] + (1 - alpha) * out[i-1]
+    end
+    return out
+end
+
+-- 3: LWMA - Linear Weighted Moving Average
+function lwma(p, n)
+    local out = {}
+    for i = 1, #p do
+        local len = i < n and i or n
+        local w_sum, weight_total = 0, 0
+        for j = 1, len do
+            w_sum = w_sum + p[i - len + j] * j
+            weight_total = weight_total + j
+        end
+        out[i] = w_sum / weight_total
+    end
+    return out
+end
+
+-- 4: SineWMA - Sine Weighted Moving Average
+function sinewma(p, n)
+    local out = {}
+    local pi = math.pi
+    for i = 1, #p do
+        local len = i < n and i or n
+        local w_sum, weight_total = 0, 0
+        for j = 1, len do
+            local w = math.sin((j / (len + 1)) * pi)
+            w_sum = w_sum + p[i - len + j] * w
+            weight_total = weight_total + w
+        end
+        out[i] = w_sum / weight_total
+    end
+    return out
+end
+
+-- 5: TriMA - Triangular Moving Average
+function trima(p, n)
+    local n_half = math.ceil((n + 1) / 2)
+    local pass1 = sma(p, n_half)
+    return sma(pass1, n_half)
+end
+
+-- 6: LSMA - Least Squares Moving Average
+function lsma(p, n)
+    local out = {}
+    for i = 1, #p do
+        local len = i < n and i or n
+        if len < 2 then
+            out[i] = p[i]
+        else
+            local sum_x, sum_y, sum_xy, sum_x2 = 0, 0, 0, 0
+            for j = 1, len do
+                local x = j
+                local y = p[i - len + j]
+                sum_x = sum_x + x
+                sum_y = sum_y + y
+                sum_xy = sum_xy + (x * y)
+                sum_x2 = sum_x2 + (x * x)
+            end
+            local m = (len * sum_xy - sum_x * sum_y) / (len * sum_x2 - sum_x^2)
+            local b = (sum_y - m * sum_x) / len
+            out[i] = m * len + b
+        end
+    end
+    return out
+end
+
+-- 7: SMMA - Smoothed Moving Average
+function smma(p, n)
+    local out = {}
+    for i = 1, #p do
+        if i < n then
+            out[i] = sum(p, 1, i) / i
+        elseif i == n then
+            out[i] = sum(p, 1, n) / n
+        else
+            out[i] = (out[i-1] * (n - 1) + p[i]) / n
+        end
+    end
+    return out
+end
+
+-- 8: HMA - Hull Moving Average
+function hma(p, n)
+    local half_n = math.floor(n / 2)
+    local sqrt_n = math.floor(math.sqrt(n))
+    local w1 = lwma(p, half_n)
+    local w2 = lwma(p, n)
+    local diff = {}
+    for i = 1, #p do
+        diff[i] = 2 * w1[i] - w2[i]
+    end
+    return lwma(diff, sqrt_n)
+end
+
+-- 9: ZeroLagEMA - Zero Lag Exponential Moving Average
+function zerolagema(p, n)
+    local lag = math.floor((n - 1) / 2)
+    local adjusted = {}
+    for i = 1, #p do
+        local prev_idx = i - lag
+        if prev_idx < 1 then prev_idx = 1 end
+        adjusted[i] = 2 * p[i] - p[prev_idx]
+    end
+    return ema(adjusted, n)
+end
+
+-- 10: DEMA - Double Exponential Moving Average
+function dema(p, n)
+    local e1 = ema(p, n)
+    local e2 = ema(e1, n)
+    local out = {}
+    for i = 1, #p do
+        out[i] = 2 * e1[i] - e2[i]
+    end
+    return out
+end
+
+-- 11: T3_basic - Basic Tillson T3 (Volume factor v = 0.7)
+function t3_basic(p, n, v)
+    --v = v or 0.7
+    v = 0.7
+    local c1 = -v * v * v
+    local c2 = 3 * v * v + 3 * v * v * v
+    local c3 = -6 * v * v - 3 * v - 3 * v * v * v
+    local c4 = 1 + 3 * v + 3 * v * v + v * v * v
+    
+    local e1 = ema(p, n)
+    local e2 = ema(e1, n)
+    local e3 = ema(e2, n)
+    local e4 = ema(e3, n)
+    local e5 = ema(e4, n)
+    local e6 = ema(e5, n)
+    
+    local out = {}
+    for i = 1, #p do
+        out[i] = c1 * e6[i] + c2 * e5[i] + c3 * e4[i] + c4 * e3[i]
+    end
+    return out
+end
+
+-- 12: ITrend - Instantaneous Trendline (Ehlers)
+function itrend(p, n)
+    local out = {}
+    local alpha = 2 / (n + 1)
+    out[1] = p[1] or 0
+    out[2] = p[2] or out[1]
+    for i = 3, #p do
+        out[i] = (alpha - (alpha^2)/4) * p[i] 
+               + (alpha^2 / 2) * p[i-1] 
+               - (alpha - 0.75 * (alpha^2)) * p[i-2]
+               + 2 * (1 - alpha) * out[i-1] 
+               - ((1 - alpha)^2) * out[i-2]
+    end
+    return out
+end
+
+-- 13: Median - Median Moving Average
+function median(p, n)
+    local out = {}
+    for i = 1, #p do
+        local len = i < n and i or n
+        local window = {}
+        for j = 1, len do
+            table.insert(window, p[i - len + j])
+        end
+        table.sort(window)
+        if len % 2 == 1 then
+            out[i] = window[math.ceil(len / 2)]
+        else
+            out[i] = (window[len / 2] + window[len / 2 + 1]) / 2
+        end
+    end
+    return out
+end
+
+-- 14: GeoMean - Geometric Mean Moving Average
+function geomean(p, n)
+    local out = {}
+    for i = 1, #p do
+        local len = i < n and i or n
+        local mult = 1
+        for j = 1, len do
+            mult = mult * p[i - len + j]
+        end
+        out[i] = mult ^ (1 / len)
+    end
+    return out
+end
+
+-- 15: REMA - Regularized Exponential Moving Average
+function rema(prices, period) -- lambda
+period = (period and period >= 1) and math.floor(period) or 20
+    
+    local num_prices = #prices
+    local rema = {}
+    
+    if num_prices == 0 then
+        return rema
+    end
+
+    local alpha = 2.0 / period
+    local lambda = 0.5
+
+    -- Seed initial values for bars that lack sufficient history
+    for i = 1, math.min(2, num_prices) do
+        rema[i] = prices[i]
+    end
+
+    -- REMA Recurrence Loop
+    -- MQL5 reverse indexing: BufferREMA[i] = (BufferREMA[i+1]*(1+2*lambda) + alpha*(Price[i]-BufferREMA[i+1]) - lambda*BufferREMA[i+2]) / (1+lambda)
+    -- Lua 5.1 forward indexing mapping: i+1 -> i-1, i+2 -> i-2
+    for i = 3, num_prices do
+        local rema_prev1 = rema[i - 1]
+        local rema_prev2 = rema[i - 2]
+        local price_curr = prices[i]
+
+        rema[i] = (rema_prev1 * (1 + 2 * lambda) + alpha * (price_curr - rema_prev1) - lambda * rema_prev2) / (1 + lambda)
+    end
+
+    return rema
+end
+
+-- 16: ILRS - Integral Line of Regression Slope
+function ilrs(p, n)
+    local out = {}
+    for i = 1, #p do
+        local len = i < n and i or n
+        if len < 2 then
+            out[i] = p[i]
+        else
+            local sum_x, sum_y, sum_xy, sum_x2 = 0, 0, 0, 0
+            for j = 1, len do
+                local x = j
+                local y = p[i - len + j]
+                sum_x = sum_x + x
+                sum_y = sum_y + y
+                sum_xy = sum_xy + (x * y)
+                sum_x2 = sum_x2 + (x * x)
+            end
+            local slope = (len * sum_xy - sum_x * sum_y) / (len * sum_x2 - sum_x^2)
+            local intercept = (sum_y - slope * sum_x) / len
+            local ma_val = intercept + slope * (len + 1) / 2
+            out[i] = ma_val + slope
+        end
+    end
+    return out
+end
+
+-- 17: IE_2 - Impulse Filter / IE-2
+function ie_2(p, n)
+    local e1 = ema(p, n)
+    local e2 = ema(p, math.floor(n / 2))
+    local out = {}
+    for i = 1, #p do
+        out[i] = (e1[i] + e2[i]) / 2
+    end
+    return out
+end
+
+-- 18: TriMAgen - Generalized Triangular Moving Average
+function trimagen(p, n)
+    local len1 = math.floor(n / 2)
+    local len2 = n - len1 + 1
+    local pass1 = sma(p, len1)
+    return sma(pass1, len2)
+end
+
+-- 19: VWMA - Volume-Weighted Moving Average
+function vwma(p, v, n)
+    local out = {}
+    for i = 1, #p do
+        local len = i < n and i or n
+        local pv_sum, v_sum = 0, 0
+        for j = 1, len do
+            local idx = i - len + j
+            pv_sum = pv_sum + p[idx] * (v[idx] or 0)
+            v_sum = v_sum + (v[idx] or 0)
+        end
+        out[i] = v_sum == 0 and p[i] or (pv_sum / v_sum)
+    end
+    return out
+end
+
+-- 20: JSmooth - Jurik Smoothing (JMA)
+function jsmooth(p, n, phase)
+    --phase = phase or 0
+    phase = 0
+    local out = {}
+    out[1] = p[1] or 0
+    local e0, e1, e2 = 0, 0, 0
+    local beta = 0.45 * (n - 1) / (0.45 * (n - 1) + 2)
+    local alpha = beta^2
+    for i = 2, #p do
+        e0 = (1 - beta) * p[i] + beta * e0
+        e1 = (p[i] - e0) * (1 - alpha) + alpha * e1
+        e2 = (e0 + e1 - out[i-1]) * (1 - alpha)^2 + (alpha^2) * e2
+        out[i] = out[i-1] + e2
+    end
+    return out
+end
+
+-- 21: SMA_eq - Equalized Simple Moving Average
+function sma_eq(p, n)
+    local out = {}
+    local sma_series = sma(p, n)
+    for i = 1, #p do
+        local len = i < n and i or n
+        local mean = sma_series[i]
+        local var = 0
+        for j = 1, len do
+            var = var + (p[i - len + j] - mean)^2
+        end
+        local std_dev = math.sqrt(var / len)
+        out[i] = mean + (std_dev * 0.1)
+    end
+    return out
+end
+
+-- 22: ALMA - Arnaud Legoux Moving Average
+function alma(p, n, offset, sigma)
+    --offset = offset or 0.85
+    offset = 0.85
+    --sigma = sigma or 6
+    sigma = 6
+    local out = {}
+    for i = 1, #p do
+        local len = i < n and i or n
+        local m = math.floor(offset * (len - 1))
+        local s = len / sigma
+        local w_sum, norm = 0, 0
+        for j = 0, len - 1 do
+            local weight = math.exp(-((j - m)^2) / (2 * s * s))
+            w_sum = w_sum + weight * p[i - len + 1 + j]
+            norm = norm + weight
+        end
+        out[i] = w_sum / norm
+    end
+    return out
+end
+
+-- 23: TEMA - Triple Exponential Moving Average
+function tema(p, n)
+    local e1 = ema(p, n)
+    local e2 = ema(e1, n)
+    local e3 = ema(e2, n)
+    local out = {}
+    for i = 1, #p do
+        out[i] = 3 * e1[i] - 3 * e2[i] + e3[i]
+    end
+    return out
+end
+
+-- 24: T3 - Tillson T3
+function t3(p, n, v)
+    --return t3_basic(p, n, v or 0.618)
+    return t3_basic(p, n, 0.618)
+end
+
+-- 25: Laguerre - Laguerre Filter
+function laguerre(p, gamma)
+--gamma = gamma or 0.7
+gamma = 0.7
+    local out = {}
+    
+    if #p == 0 then return out end
+    
+    -- Seed filter stages with initial price to prevent 0-ramp cold start distortion
+    local L0, L1, L2, L3 = p[1], p[1], p[1], p[1]
+    out[1] = p[1]
+    
+    for i = 2, #p do
+        local price = p[i]
+        local L0_prev, L1_prev, L2_prev, L3_prev = L0, L1, L2, L3
+        
+        L0 = (1 - gamma) * price + gamma * L0_prev
+        L1 = -gamma * L0 + L0_prev + gamma * L1_prev
+        L2 = -gamma * L1 + L1_prev + gamma * L2_prev
+        L3 = -gamma * L2 + L2_prev + gamma * L3_prev
+        
+        out[i] = (L0 + 2 * L1 + 2 * L2 + L3) / 6
+    end
+    
+    return out
+end
+
+-- 26: MD - McGinley Dynamic
+function md(p, n)
+    local out = {}
+    out[1] = p[1] or 0
+    for i = 2, #p do
+        local ratio = p[i] / out[i-1]
+        out[i] = out[i-1] + (p[i] - out[i-1]) / (n * (ratio^4))
+    end
+    return out
+end
+
+-- 27: BF2P - Butterworth Filter (2-Pole)
+function bf2p(p, n)
+    local out = {}
+    local pi = math.pi
+    local a1 = math.exp(-math.sqrt(2) * pi / n)
+    local b1 = 2 * a1 * math.cos(math.sqrt(2) * pi / n)
+    local c2 = b1
+    local c3 = -a1 * a1
+    local c1 = 1 - c2 - c3
+    out[1] = p[1] or 0
+    out[2] = p[2] or out[1]
+    for i = 3, #p do
+        out[i] = c1 * (p[i] + 2 * p[i-1] + p[i-2]) / 4 + c2 * out[i-1] + c3 * out[i-2]
+    end
+    return out
+end
+
+-- 28: BF3P - Butterworth Filter (3-Pole)
+function bf3p(p, n)
+    local out = {}
+    local pi = math.pi
+    local a1 = math.exp(-pi / n)
+    local b1 = 2 * a1 * math.cos(math.sqrt(3) * pi / n)
+    local c1 = a1 * a1
+    local coef2 = b1 + c1
+    local coef3 = -(c1 + b1 * c1)
+    local coef4 = c1 * c1
+    local coef1 = 1 - coef2 - coef3 - coef4
+    out[1] = p[1] or 0
+    out[2] = p[2] or out[1]
+    out[3] = p[3] or out[2]
+    for i = 4, #p do
+        out[i] = coef1 * (p[i] + 3 * p[i-1] + 3 * p[i-2] + p[i-3]) / 8 
+               + coef2 * out[i-1] + coef3 * out[i-2] + coef4 * out[i-3]
+    end
+    return out
+end
+
+-- 29: SuperSmu - Ehlers SuperSmoother Filter
+function supersmu(p, n)
+    local out = {}
+    local pi = math.pi
+    local a1 = math.exp(-math.sqrt(2) * pi / n)
+    local b1 = 2 * a1 * math.cos(math.sqrt(2) * pi / n)
+    local c2 = b1
+    local c3 = -a1 * a1
+    local c1 = 1 - c2 - c3
+    out[1] = p[1] or 0
+    out[2] = p[2] or out[1]
+    for i = 3, #p do
+        out[i] = c1 * (p[i] + p[i-1]) / 2 + c2 * out[i-1] + c3 * out[i-2]
+    end
+    return out
+end
+
+-- 30: Decycler - Ehlers Decycler
+function decycler(p, n)
+local out = {}
+    if #p == 0 then return out end
+
+    local pi = math.pi
+    -- Standard Ehlers Cutoff Alpha for High-Pass / Decycler
+    local arg = (2 * pi) / (n * math.sqrt(2))
+    local alpha = (math.cos(arg) + math.sin(arg) - 1) / math.cos(arg)
+    
+    out[1] = p[1]
+    
+    for i = 2, #p do
+        -- Correct Decycler update formula:
+        -- Decycler = Price - HighPass = alpha/2 * (p[i] + p[i-1]) + (1 - alpha) * Decycler[i-1]
+        out[i] = (alpha / 2) * (p[i] + p[i-1]) + (1 - alpha) * out[i-1]
+    end
+    
+    return out
+end
+
+-- 31: eVWMA - Elastic Volume-Weighted Moving Average
+function evwma(p, v, n)
+    local out = {}
+    out[1] = p[1] or 0
+    for i = 1, #p do
+        local len = i < n and i or n
+        local v_sum = sum(v, i - len + 1, i)
+        if i == 1 or v_sum == 0 then
+            out[i] = p[i]
+        else
+            out[i] = ((v_sum - v[i]) * out[i-1] + v[i] * p[i]) / v_sum
+        end
+    end
+    return out
+end
+
+-- 32: EWMA - Exponentially Weighted Moving Average
+function ewma(p, lambda)
+    --lambda = lambda or 0.94
+    lambda = 0.94
+    local out = {}
+    out[1] = p[1] or 0
+    for i = 2, #p do
+        out[i] = (1 - lambda) * p[i] + lambda * out[i-1]
+    end
+    return out
+end
+
+-- 33: DsEMA - Double Smoothed EMA
+function dsema(p, n1, n2)
+    --local pass1 = ema(p, n1 or 10)
+    local pass1 = ema(p, 10)
+    --return ema(pass1, n2 or 10)
+    return ema(pass1, 10)
+end
+
+-- 34: TsEMA - Triple Smoothed EMA
+function tsema(p, n1, n2, n3)
+    --local pass1 = ema(p, n1 or 10)
+    local pass1 = ema(p, 10)
+    --local pass2 = ema(pass1, n2 or 10)
+    local pass2 = ema(pass1, 10)
+    --return ema(pass2, n3 or 10)
+    return ema(pass2, 10)
+end
+
+-- 35: VEMA - Volume Exponential Moving Average
+function vema(p, v, n)
+    local out = {}
+    out[1] = p[1] or 0
+    for i = 2, #p do
+        local len = i < n and i or n
+        local v_avg = sum(v, i - len + 1, i) / len
+        local vol_factor = (v_avg > 0) and ((v[i] or 0) / v_avg) or 1
+        local alpha = math.min(1, (2 / (n + 1)) * vol_factor)
+        out[i] = alpha * p[i] + (1 - alpha) * out[i-1]
+    end
+    return out
+end
+
+
+
+-- ============================================================================
+-- ID Mapping Table & Unified Call local function
+-- ============================================================================
+
+local map = {
+    [0] = sma,        [1] = ema,        [2] = wilder,     [3] = lwma,
+    [4] = sinewma,    [5] = trima,      [6] = lsma,       [7] = smma,
+    [8] = hma,        [9] = zerolagema, [10] = dema,      [11] = t3_basic,
+    [12] = itrend,    [13] = median,    [14] = geomean,   [15] = rema,
+    [16] = ilrs,      [17] = ie_2,      [18] = trimagen,  [19] = vwma,
+    [20] = jsmooth,   [21] = sma_eq,    [22] = alma,      [23] = tema,
+    [24] = t3,        [25] = laguerre,  [26] = md,        [27] = bf2p,
+    [28] = bf3p,      [29] = supersmu,  [30] = decycler,  [31] = evwma,
+    [32] = ewma,      [33] = dsema,     [34] = tsema,     [35] = vema,
+}
+
+-- Dispatch local function to execute moving average by ID
+local function AllAvarages(type_id, prices, period, volume)
+    local func = map[type_id]
+    if not func then error("Invalid Moving Average ID: " .. tostring(type_id)) end
+    
+    -- Routing for volume-based moving averages
+    if type_id == 19 or type_id == 31 or type_id == 35 then
+        return func(prices, volume, period)
+    else
+        return func(prices, period)
+    end
+end
+
+local function resolve_source(source)
+  if type(source) == "number" then
+    if source == 0 then
+      return CLOSE
+    elseif source == 1 then
+      return OPEN
+    elseif source == 2 then
+      return HIGH
+    elseif source == 3 then
+      return LOW
+    elseif source == 4 then
+      return MEDIAN
+    elseif source == 5 then
+      return TYPICAL
+    elseif source == 6 then
+      return WEIGHTED
+    end
+  end
+  return source
+end
+
+function CALC()
+ local prices=resolve_source(IN.ApplyTo)
+  OUT.Ma = AllAvarages(IN.MaMode,prices, IN.Period, VOLUME)
+  OUT.Color={}
+  if #OUT.Ma >1 then 
+  OUT.Color[1]=CLR_RED
+  for i=2,  #OUT.Ma do
+    if OUT.Ma[i]>=OUT.Ma[i-1] then  OUT.Color[i]=CLR_GREEN else OUT.Color[i]=CLR_RED end   
+  end
+  end
+end
+

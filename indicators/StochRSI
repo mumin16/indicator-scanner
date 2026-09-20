@@ -1,0 +1,16 @@
+SEPARATEWINDOW = true
+IN = {
+  Period = 14,
+  Smooth = 3
+}
+OUT = {
+  StochRsi = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  StochRsiAvg = { DRAW_LINE, CLR_RED, SHIFT_NONE }
+}
+LEVELS = { 0.2, 0.8 }
+NOTE = "2022 Musavir"
+
+function CALC()
+  OUT.StochRsi = STOCHRSI(IN.Period)
+  OUT.StochRsiAvg = SMA(OUT.StochRsi, IN.Smooth)
+end

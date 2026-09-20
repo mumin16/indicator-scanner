@@ -1,0 +1,9 @@
+SEPARATEWINDOW = true
+IN = { LongRoc = 14, ShortRoc = 11, WmaPeriod = 10 }
+OUT = { Copp = { DRAW_HISTOGRAM, CLR_GREEN, SHIFT_NONE } }
+LEVELS = { 0 }
+NOTE = "2022 Musavir"
+
+function CALC()
+  OUT.Copp = COPP(IN.LongRoc, IN.ShortRoc, IN.WmaPeriod)
+end

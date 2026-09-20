@@ -1,0 +1,13 @@
+SEPARATEWINDOW = true
+IN = {
+  Ema1 = 9,
+  Ema2 = 9,
+  MassPeriod = 25
+}
+OUT = { Mass = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+LEVELS = { 27, 26.5 }
+NOTE = "Mass Index"
+
+function CALC()
+  OUT.Mass = MI(IN.Ema1, IN.Ema2, IN.MassPeriod)
+end

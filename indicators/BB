@@ -1,0 +1,12 @@
+SEPARATEWINDOW = false
+IN = { Period = 14, Devition = 2, PriceType = 0 }
+OUT = {
+  BandUp = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  BandDown = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  Sma = { DRAW_LINE, CLR_GREEN, SHIFT_NONE }
+}
+NOTE = "Bollinger Bands - PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+  OUT.Sma, OUT.BandUp, OUT.BandDown = BollingerBands(IN.PriceType, IN.Period, IN.Devition)
+end

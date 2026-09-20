@@ -1,0 +1,19 @@
+SEPARATEWINDOW = false
+    
+IN = { tenkan_period = 9, kijun_period = 26, senkou_period = 52 }
+OUT = {
+  SpanA = { DRAW_LINE, CLR_BROWN, SHIFT_NONE }
+  ,
+  SpanB = { DRAW_LINE, CLR_LAVENDER, SHIFT_NONE }
+  ,
+  Cloud = { DRAW_TRIANGLESTRIP, "CloudColor", SHIFT_NONE }
+
+}
+NOTE = "Ichimoku Kinko Hyo"
+
+
+function CALC()
+  OUT.SpanA, OUT.SpanB, OUT.Cloud, OUT.CloudColor = Ichimoku(IN.tenkan_period, IN.kijun_period, IN.senkou_period)
+end
+
+

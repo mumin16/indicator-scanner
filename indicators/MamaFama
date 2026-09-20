@@ -1,0 +1,16 @@
+SEPARATEWINDOW = false
+IN = {
+  FastLimit = 0.5,
+  SlowLimit = 0.05
+}
+
+OUT = {
+  Mama = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  Fama = { DRAW_LINE, CLR_RED, SHIFT_NONE }
+}
+
+NOTE = "Mama + Fama"
+
+function CALC()
+  OUT.Mama, OUT.Fama = MamaFamaOsc(MEDIAN, IN.FastLimit, IN.SlowLimit)
+end

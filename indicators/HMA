@@ -1,0 +1,8 @@
+SEPARATEWINDOW = false
+IN = { Period = 26, PriceType = 0 }
+OUT = { Hma = { DRAW_LINE, "Color", SHIFT_NONE } }
+NOTE = "Hull Moving Average - PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+  OUT.Hma, OUT.Color = HMA(IN.PriceType, IN.Period)
+end

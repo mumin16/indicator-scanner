@@ -1,0 +1,13 @@
+SEPARATEWINDOW = false
+IN = {
+  Depth = 21,
+  Deviation = 5,
+  Backstep = 3
+}
+
+OUT = { ZigZag = { DRAW_SECTION, CLR_ORANGE, SHIFT_NONE } }
+NOTE = "ZigZag"
+
+function CALC()
+  OUT.ZigZag = ZIGZAG(IN.Depth, IN.Deviation, IN.Backstep)
+end

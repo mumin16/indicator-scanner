@@ -1,0 +1,18 @@
+SEPARATEWINDOW = false
+IN = {
+  Period = 20,
+  Multiplier = 1,
+  PriceType = 0
+}
+OUT = {
+  Ma = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  KUp = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  KDown = { DRAW_LINE, CLR_GREEN, SHIFT_NONE }
+}
+NOTE = "PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+  OUT.KUp = KELTNERUP(IN.PriceType, IN.Period, IN.Multiplier)
+  OUT.KDown = KELTNERDOWN(IN.PriceType, IN.Period, IN.Multiplier)
+  OUT.Ma = EMA(IN.PriceType, IN.Period)
+end

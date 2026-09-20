@@ -1,0 +1,14 @@
+SEPARATEWINDOW = true
+IN = {
+  FastEma = 12,
+  SlowEma = 26,
+  SignalPeriod = 9,
+  PriceType = 0
+}
+OUT = { Osma = { DRAW_HISTOGRAM, CLR_GREEN, SHIFT_NONE } }
+NOTE =
+"Moving Average of Oscillator aka MACD histogram - PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+  OUT.Osma = OSMA(IN.PriceType, IN.FastEma, IN.SlowEma, IN.SignalPeriod)
+end

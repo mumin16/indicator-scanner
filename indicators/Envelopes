@@ -1,0 +1,14 @@
+SEPARATEWINDOW = false
+IN = {
+  Period = 14,
+  Devition = 6,
+  PriceType = 0,
+  MaType = 0
+}
+OUT = { EnvUp = { DRAW_LINE, CLR_GREEN, SHIFT_NONE }, EnvLow = { DRAW_LINE, CLR_RED, SHIFT_NONE } }
+NOTE =
+"PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6 \n MaType can be Sma=0 Ema=1 Smma=2 Lwma=3"
+
+function CALC()
+  OUT.EnvUp, OUT.EnvLow = ENVELOPES(IN.PriceType, IN.Period, IN.Deviation, IN.MaType)
+end

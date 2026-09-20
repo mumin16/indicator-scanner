@@ -1,0 +1,18 @@
+SEPARATEWINDOW = true
+OUT = { Volume = { DRAW_HISTOGRAM, "colorbuffer", SHIFT_NONE } }
+NOTE = "Colored Volume"
+
+function CALC()
+  OUT.Volume = VOLUME
+  OUT.colorbuffer = {}
+  OUT.colorbuffer[1] = CLR_GREEN
+
+
+  for i = 1, #VOLUME, 1 do
+    if i ~= 1 and CLOSE[i] > OPEN[i] then
+      OUT.colorbuffer[i] = CLR_GREEN
+    else
+      OUT.colorbuffer[i] = CLR_RED
+    end
+  end
+end

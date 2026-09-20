@@ -1,0 +1,11 @@
+SEPARATEWINDOW = true
+IN = { Period = 100, Smooth = 14 }
+OUT = { WPr = { DRAW_LINE, CLR_RED, SHIFT_NONE }, WPrAvg = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+LEVELS = { -20, -80 }
+NOTE = "Larry Williams' Percent Range and Hull Moving Average"
+
+function CALC()
+  OUT.WPr = WPR(IN.Period)
+  OUT.WPrAvg = HMA(OUT.WPr, IN.Smooth)
+  --OUT.WPrAvg=EMA(OUT.WPr,IN.Smooth)
+end

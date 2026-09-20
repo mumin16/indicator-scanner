@@ -1,0 +1,9 @@
+SEPARATEWINDOW = true
+IN = { Period = 14, PriceType = 5 }
+OUT = { Cci = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+LEVELS = { -100, 0, 100 }
+NOTE = "Commodity Channel Index - PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+  OUT.Cci = CCI(IN.PriceType, IN.Period)
+end

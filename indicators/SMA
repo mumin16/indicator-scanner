@@ -1,0 +1,12 @@
+SEPARATEWINDOW = false
+IN = {
+  Period = 14,
+  ApplyTo = 0
+}
+OUT = { SimpleMA = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+
+NOTE = "Simple Moving Average - ApplyTo can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+  OUT.SimpleMA = SMA(IN.ApplyTo, IN.Period)
+end

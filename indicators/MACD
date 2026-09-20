@@ -1,0 +1,17 @@
+SEPARATEWINDOW = true
+IN = {
+  FastEma = 12,
+  SlowEma = 26,
+  MacdSma = 9,
+  PriceType = 0
+}
+OUT = {
+  Macd = { DRAW_HISTOGRAM, CLR_GREEN, SHIFT_NONE },
+  Signal = { DRAW_LINE, CLR_RED, SHIFT_NONE }
+}
+NOTE = "PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+  OUT.Macd = MACD(IN.PriceType, IN.FastEma, IN.SlowEma)
+  OUT.Signal = SMA(OUT.Macd, IN.MacdSma)
+end

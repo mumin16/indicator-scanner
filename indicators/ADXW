@@ -1,0 +1,12 @@
+SEPARATEWINDOW = true
+IN = { Period = 14 }
+OUT = {
+   AdxW = { DRAW_LINE, CLR_BLUE, SHIFT_NONE },
+   Pdi = { DRAW_DASHEDLINE, CLR_GREEN, SHIFT_NONE },
+   Mdi = { DRAW_DASHEDLINE, CLR_RED, SHIFT_NONE }
+}
+NOTE = "Average Directional Movement Index by Welles Wilder"
+
+function CALC()
+   OUT.AdxW, OUT.Pdi, OUT.Mdi = ADXW(IN.Period)
+end

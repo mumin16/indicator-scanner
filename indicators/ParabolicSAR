@@ -1,0 +1,11 @@
+SEPARATEWINDOW = false
+IN = {
+  SarStep = 0.002,
+  SarMaximum = 0.02
+}
+OUT = {PSar={ DRAW_POINT, CLR_GREEN, SHIFT_NONE }}
+NOTE = "Parabolic Sar Indicator"
+
+function CALC()
+  OUT.PSar = PSAR(IN.SarStep, IN.SarMaximum)
+end

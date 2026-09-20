@@ -1,0 +1,8 @@
+SEPARATEWINDOW = true
+IN = { Period = 13 }
+OUT = { BullsPower = { DRAW_HISTOGRAM, CLR_GREEN, SHIFT_NONE } }
+NOTE = "Bulls Power"
+
+function CALC()
+  OUT.BullsPower = BULLSPOWER(IN.Period)
+end

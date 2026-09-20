@@ -1,0 +1,8 @@
+SEPARATEWINDOW = true
+IN = { Period = 25 }
+OUT = { VRoc = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+NOTE = "Volume Rate of Change"
+
+function CALC()
+  OUT.VRoc = VROC(IN.Period)
+end

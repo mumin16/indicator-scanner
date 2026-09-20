@@ -1,0 +1,11 @@
+SEPARATEWINDOW = false
+IN = { length = 14, sigma = 4 }
+OUT = { Gauss = { DRAW_LINE, "Color", SHIFT_NONE } }
+NOTE = "Gaussian Filter"
+
+
+function CALC()
+    OUT.Gauss, OUT.Color = gaussian_filter(CLOSE, IN.length, IN.sigma)
+end
+
+

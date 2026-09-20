@@ -1,0 +1,11 @@
+SEPARATEWINDOW = true
+IN = { Period = 14 }
+OUT = {
+  AroonUp = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  AroonDown = { DRAW_LINE, CLR_RED, SHIFT_NONE }
+}
+NOTE = "Aroon Oscillator"
+
+function CALC()
+  OUT.AroonUp, OUT.AroonDown = AROON(IN.Period)
+end

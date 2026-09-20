@@ -1,0 +1,9 @@
+SEPARATEWINDOW = true
+IN = { FastPeriod = 3, SlowPeriod = 10, MaType = 1 }
+OUT = { Chaikin = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+LEVELS = { 0 }
+NOTE = "Chaikin Oscillator - MaType can be Sma=0 Ema=1 Smma=2 Lwma=3"
+
+function CALC()
+  OUT.Chaikin = CHAIKIN(IN.FastPeriod, IN.SlowPeriod, IN.MaType)
+end

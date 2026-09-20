@@ -1,0 +1,99 @@
+SEPARATEWINDOW = false
+
+IN = {
+    Length = 200 -- Lookback period to identify Swing High and Swing Low
+}
+
+OUT = {
+    -- Retracement Levels
+    Fib_0    = { DRAW_TRENDLINE, CLR_RED,    SHIFT_NONE }, -- 0.0%
+    Fib_236  = { DRAW_TRENDLINE, CLR_BLUE,   SHIFT_NONE }, -- 23.6%
+    Fib_382  = { DRAW_TRENDLINE, CLR_BLUE,   SHIFT_NONE }, -- 38.2%
+    Fib_500  = { DRAW_TRENDLINE, CLR_BLUE,   SHIFT_NONE }, -- 50.0%
+    Fib_618  = { DRAW_TRENDLINE, CLR_BLUE,   SHIFT_NONE }, -- 61.8%
+    Fib_786  = { DRAW_TRENDLINE, CLR_BLUE,   SHIFT_NONE }, -- 78.6%
+    Fib_1000 = { DRAW_TRENDLINE, CLR_RED,    SHIFT_NONE }, -- 100.0%
+
+    -- Extension Levels
+    Fib_1272 = { DRAW_TRENDLINE, CLR_GREEN,  SHIFT_NONE }, -- 127.2%
+    Fib_1618 = { DRAW_TRENDLINE, CLR_GREEN,  SHIFT_NONE }, -- 161.8%
+    Fib_2618 = { DRAW_TRENDLINE, CLR_GREEN,  SHIFT_NONE }  -- 261.8%
+}
+
+NOTE = "Auto Fibonacci Retracement & Extension Indicator"
+
+function CALC()
+    local N = #CLOSE
+    if N < IN.Length then return end
+
+    local max_h = HIGH[N - IN.Length + 1]
+    local min_l = LOW[N - IN.Length + 1]
+    local max_idx = N - IN.Length + 1
+    local min_idx = N - IN.Length + 1
+
+    -- 1. Find Swing High & Swing Low in lookback window
+    for i = N - IN.Length + 2, N do
+        if HIGH[i] > max_h then
+            max_h = HIGH[i]
+            max_idx = i
+        end
+        if LOW[i] < min_l then
+            min_l = LOW[i]
+            min_idx = i
+        end
+    end
+
+    local diff = max_h - min_l
+    if diff == 0 then return end
+
+    -- 2. Determine Trend Direction (Uptrend: Low formed before High | Downtrend: High formed before Low)
+    local is_uptrend = min_idx < max_idx
+
+    local x1 = math.min(min_idx, max_idx) - 1
+    local x2 = N - 1
+
+    local f0, f236, f382, f500, f618, f786, f100, f127, f161, f261
+
+    if is_uptrend then
+        -- Uptrend: 0.0% at Swing High, 100.0% at Swing Low
+        f0   = max_h
+        f236 = max_h - diff * 0.236
+        f382 = max_h - diff * 0.382
+        f500 = max_h - diff * 0.500
+        f618 = max_h - diff * 0.618
+        f786 = max_h - diff * 0.786
+        f100 = min_l
+
+        -- Extensions projected above Swing High
+        f127 = min_l + diff * 1.272
+        f161 = min_l + diff * 1.618
+        f261 = min_l + diff * 2.618
+    else
+        -- Downtrend: 0.0% at Swing Low, 100.0% at Swing High
+        f0   = min_l
+        f236 = min_l + diff * 0.236
+        f382 = min_l + diff * 0.382
+        f500 = min_l + diff * 0.500
+        f618 = min_l + diff * 0.618
+        f786 = min_l + diff * 0.786
+        f100 = max_h
+
+        -- Extensions projected below Swing Low
+        f127 = max_h - diff * 1.272
+        f161 = max_h - diff * 1.618
+        f261 = max_h - diff * 2.618
+    end
+
+    -- 3. Render Trendlines
+    OUT.Fib_0    = { x1, f0,   x2, f0 }
+    OUT.Fib_236  = { x1, f236, x2, f236 }
+    OUT.Fib_382  = { x1, f382, x2, f382 }
+    OUT.Fib_500  = { x1, f500, x2, f500 }
+    OUT.Fib_618  = { x1, f618, x2, f618 }
+    OUT.Fib_786  = { x1, f786, x2, f786 }
+    OUT.Fib_1000 = { x1, f100, x2, f100 }
+
+    OUT.Fib_1272 = { x1, f127, x2, f127 }
+    OUT.Fib_1618 = { x1, f161, x2, f161 }
+    OUT.Fib_2618 = { x1, f261, x2, f261 }
+end

@@ -1,0 +1,13 @@
+SEPARATEWINDOW = false
+IN = {
+  Period = 10,
+  FastEMA = 2,
+  SlowEMA = 30,
+  ApplyTo = 1
+}
+OUT = { AdaptiveMA = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+NOTE = "Adaptive Moving Average - ApplyTo can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+  OUT.AdaptiveMA = AMA(IN.ApplyTo, IN.Period, IN.FastEMA, IN.SlowEMA)
+end

@@ -1,0 +1,13 @@
+SEPARATEWINDOW = false
+IN = { Length = 14, Mult = 1.0, CalcMethod = 0 }
+OUT = {
+  Uppers = { DRAW_TRENDLINE, CLR_GREEN, SHIFT_NONE },
+  Lowers = { DRAW_TRENDLINE, CLR_RED, SHIFT_NONE }
+}
+NOTE = "CalcMethod : 0=Atr, 1=Stdev, 2=Linreg"
+
+
+function CALC()
+  OUT.Uppers, OUT.Lowers, _, _ = Trendlines(IN.Length, IN.Mult, IN.CalcMethod)
+end
+

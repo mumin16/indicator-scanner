@@ -1,0 +1,210 @@
+SEPARATEWINDOW = false
+IN = { 
+    PivotLength = 14, 
+    ErrorThreshold = 0.12, 
+    PatternSelect = 0 
+}
+OUT = {
+  Harmonic_Fills = { DRAW_HARMONIC, CLR_BLUE, SHIFT_NONE },
+  Harmonic_Lines = { DRAW_TRENDLINE, CLR_YELLOW, SHIFT_NONE }
+}
+NOTE = "PatternSelect: 0=All, 1=Gartley, 2=Bat, 3=Alt Bat, 4=Butterfly, 5=Crab, 6=Deep Crab, 7=Shark, 8=5-0, 9=AB=CD, 10=Alt AB=CD"
+
+local function Len(p1, p2)
+    return math.abs(p2.val - p1.val)
+end
+
+local function InRange(val, target, tol)
+    return math.abs(val - target) <= tol
+end
+
+local function Between(val, min_val, max_val)
+    return val >= min_val and val <= max_val
+end
+
+-- Evaluates 5-Point Patterns (ID: 1 to 8)
+function Evaluate5PointPattern(X, A, B, C, D, tol)
+    local XA = Len(X, A)
+    local AB = Len(A, B)
+    local BC = Len(B, C)
+    local CD = Len(C, D)
+    local AD = Len(A, D)
+
+    if XA == 0 or AB == 0 or BC == 0 or CD == 0 then return 0 end
+
+    local ab_xa = AB / XA
+    local bc_ab = BC / AB
+    local cd_bc = CD / BC
+    local ad_xa = AD / XA
+
+    -- 1. Standard Directional Validation (Gartley, Bat, Butterfly, Crab)
+    local is_std_bullish = (X.val < A.val) and (B.val < A.val) and (B.val > X.val) and (C.val > B.val) and (C.val < A.val) and (D.val < C.val)
+    local is_std_bearish = (X.val > A.val) and (B.val > A.val) and (B.val < X.val) and (C.val < B.val) and (C.val > A.val) and (D.val > C.val)
+
+    -- 2. Shark & 5-0 Directional Validation (Node C breaks Node A, Node D breaks Node B)
+    local is_shark_bullish = (X.val < A.val) and (B.val < A.val) and (B.val > X.val) and (C.val > A.val) and (D.val < B.val)
+    local is_shark_bearish = (X.val > A.val) and (B.val > A.val) and (B.val < X.val) and (C.val < A.val) and (D.val > B.val)
+
+    -- Standard Patterns Evaluation
+    if is_std_bullish or is_std_bearish then
+        if InRange(ab_xa, 0.618, tol) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 1.272, 1.618) and InRange(ad_xa, 0.786, tol) then
+            return 1 -- Gartley
+        end
+        if Between(ab_xa, 0.382, 0.500) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 1.618, 2.618) and InRange(ad_xa, 0.886, tol) then
+            return 2 -- Bat
+        end
+        if InRange(ab_xa, 0.382, tol) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 2.000, 3.618) and InRange(ad_xa, 1.130, tol) then
+            return 3 -- Alt Bat
+        end
+        if InRange(ab_xa, 0.786, tol) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 1.618, 2.618) and Between(ad_xa, 1.272, 1.618) then
+            return 4 -- Butterfly
+        end
+        if Between(ab_xa, 0.382, 0.618) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 2.618, 3.618) and InRange(ad_xa, 1.618, tol) then
+            return 5 -- Crab
+        end
+        if InRange(ab_xa, 0.886, tol) and Between(bc_ab, 0.382, 0.886) and Between(cd_bc, 2.000, 3.618) and InRange(ad_xa, 1.618, tol) then
+            return 6 -- Deep Crab
+        end
+    end
+
+    -- Shark & 5-0 Pattern Evaluation
+    if is_shark_bullish or is_shark_bearish then
+        -- 7. Shark: BC/AB (1.130-1.618), CD/BC (1.618-2.240), AD/XA (0.886-1.130)
+        if Between(bc_ab, 1.130, 1.618) and Between(cd_bc, 1.618, 2.240) and Between(ad_xa, 0.886, 1.130) then
+            return 7
+        end
+        -- 8. 5-0 Pattern: BC/AB (1.130-1.618), CD/BC (1.618-2.240), CD/BC (0.500)
+        if Between(bc_ab, 1.130, 1.618) and Between(cd_bc, 1.618, 2.240) and InRange(cd_bc, 0.500, tol) then
+            return 8
+        end
+    end
+
+    return 0
+end
+
+-- Evaluates 4-Point Patterns (ID: 9 & 10)
+function Evaluate4PointPattern(A, B, C, D, tol)
+    local AB = Len(A, B)
+    local BC = Len(B, C)
+    local CD = Len(C, D)
+
+    if AB == 0 or BC == 0 then return 0 end
+
+    local is_bullish = (A.val > B.val) and (C.val > B.val) and (C.val < A.val) and (D.val < C.val) and (D.val < B.val)
+    local is_bearish = (A.val < B.val) and (C.val < B.val) and (C.val > A.val) and (D.val > C.val) and (D.val > B.val)
+    if not (is_bullish or is_bearish) then return 0 end
+
+    local bc_ab = BC / AB
+    local cd_bc = CD / BC
+    local cd_ab = CD / AB
+
+    if Between(bc_ab, 0.618, 0.786) and Between(cd_bc, 1.272, 1.618) and InRange(cd_ab, 1.000, tol) then
+        return 9 -- AB=CD
+    end
+
+    if Between(bc_ab, 0.382, 0.886) and (InRange(cd_ab, 0.618, tol) or InRange(cd_ab, 1.272, tol) or InRange(cd_ab, 1.618, tol)) then
+        return 10 -- Alt AB=CD
+    end
+
+    return 0
+end
+
+function HarmonicPatterns(pivotLen, tol, patternSelect)
+    local N = #CLOSE
+    if N == 0 then return {}, {} end
+
+    local fills_out = {}
+    local lines_out = {}
+
+    local raw_pivots = {}
+    for i = pivotLen + 1, N - pivotLen do
+        local is_high = true
+        local is_low  = true
+
+        for j = i - pivotLen, i + pivotLen do
+            if j ~= i then
+                if HIGH[j] >= HIGH[i] then is_high = false end
+                if LOW[j]  <= LOW[i]  then is_low  = false end
+            end
+        end
+
+        if is_high then
+            table.insert(raw_pivots, { idx = i - 1, val = HIGH[i], isHigh = true })
+        elseif is_low then
+            table.insert(raw_pivots, { idx = i - 1, val = LOW[i], isHigh = false })
+        end
+    end
+
+    local pivots = {}
+    for _, p in ipairs(raw_pivots) do
+        if #pivots == 0 then
+            table.insert(pivots, p)
+        else
+            local last = pivots[#pivots]
+            if last.isHigh == p.isHigh then
+                if (p.isHigh and p.val > last.val) or (not p.isHigh and p.val < last.val) then
+                    pivots[#pivots] = p
+                end
+            else
+                table.insert(pivots, p)
+            end
+        end
+    end
+
+    local numPivots = #pivots
+    if numPivots < 4 then return fills_out, lines_out end
+
+    local push_line = function(p1, p2)
+        table.insert(lines_out, p1.idx) table.insert(lines_out, p1.val)
+        table.insert(lines_out, p2.idx) table.insert(lines_out, p2.val)
+    end
+
+    -- 5-Point Patterns
+    if numPivots >= 5 then
+        for i = 1, numPivots - 4 do
+            local X = pivots[i]
+            local A = pivots[i + 1]
+            local B = pivots[i + 2]
+            local C = pivots[i + 3]
+            local D = pivots[i + 4]
+
+            local pat_id = Evaluate5PointPattern(X, A, B, C, D, tol)
+            if pat_id > 0 and (patternSelect == 0 or patternSelect == pat_id) then
+                table.insert(fills_out, X.idx) table.insert(fills_out, X.val)
+                table.insert(fills_out, A.idx) table.insert(fills_out, A.val)
+                table.insert(fills_out, B.idx) table.insert(fills_out, B.val)
+                table.insert(fills_out, C.idx) table.insert(fills_out, C.val)
+                table.insert(fills_out, D.idx) table.insert(fills_out, D.val)
+
+                push_line(X, A) push_line(A, B) push_line(B, C)
+                push_line(C, D) push_line(X, B) push_line(B, D) push_line(X, C)
+            end
+        end
+    end
+
+    -- 4-Point Patterns
+    for i = 1, numPivots - 3 do
+        local A = pivots[i]
+        local B = pivots[i + 1]
+        local C = pivots[i + 2]
+        local D = pivots[i + 3]
+
+        local pat_id = Evaluate4PointPattern(A, B, C, D, tol)
+        if pat_id > 0 and (patternSelect == 0 or patternSelect == pat_id) then
+            table.insert(fills_out, A.idx) table.insert(fills_out, A.val)
+            table.insert(fills_out, B.idx) table.insert(fills_out, B.val)
+            table.insert(fills_out, C.idx) table.insert(fills_out, C.val)
+            table.insert(fills_out, B.idx) table.insert(fills_out, B.val)
+            table.insert(fills_out, D.idx) table.insert(fills_out, D.val)
+
+            push_line(A, B) push_line(B, C) push_line(C, D)
+            push_line(A, C) push_line(B, D)
+        end
+    end
+
+    return fills_out, lines_out
+end
+
+function CALC()
+    OUT.Harmonic_Fills, OUT.Harmonic_Lines = HarmonicPatterns(IN.PivotLength, IN.ErrorThreshold, IN.PatternSelect)
+end

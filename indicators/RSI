@@ -1,0 +1,13 @@
+SEPARATEWINDOW = true
+IN = {
+  Period = 14,
+  PriceType = 0
+}
+OUT = { Rsi = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+LEVELS = { 30, 70 }
+NOTE = "PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+
+function CALC()
+  OUT.Rsi = RSI(IN.PriceType, IN.Period)
+end

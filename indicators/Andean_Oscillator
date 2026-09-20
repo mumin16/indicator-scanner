@@ -1,0 +1,17 @@
+SEPARATEWINDOW = true
+IN = {
+  Length = 50,
+  SignalLength = 10
+}
+
+OUT = {
+  Bull = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  Bear = { DRAW_LINE, CLR_RED, SHIFT_NONE },
+  Signal = { DRAW_LINE, CLR_ORANGE, SHIFT_NONE }
+}
+
+NOTE = "Andean Oscillator"
+
+function CALC()
+  OUT.Bull, OUT.Bear, OUT.Signal = AndeanOsc(IN.Length, IN.SignalLength)
+end

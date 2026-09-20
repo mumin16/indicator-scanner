@@ -1,0 +1,8 @@
+SEPARATEWINDOW = true
+IN = { MaxPriceChange = 300 }
+OUT = { Asi = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+NOTE = "Accumulation Swing Index"
+
+function CALC()
+  OUT.Asi = ASI(IN.MaxPriceChange)
+end

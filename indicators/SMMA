@@ -1,0 +1,11 @@
+SEPARATEWINDOW = false
+IN = {
+        Period = 14,
+        ApplyTo = 0
+}
+OUT = { SmoothedMA = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+NOTE = "Smoothed Moving Average - ApplyTo can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+        OUT.SmoothedMA = SMMA(IN.ApplyTo, IN.Period)
+end

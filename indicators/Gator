@@ -1,0 +1,121 @@
+SEPARATEWINDOW = true
+IN = { JawsPeriod = 13, JawsShift = 8, TeethPeriod = 8, TeethShift = 5, LipsPeriod = 5, LipsShift = 3 }
+OUT = {
+   Upper = { DRAW_HISTOGRAM, "UpperColor", 5 },
+   Lower = { DRAW_HISTOGRAM, "LowerColor", 3 }
+}
+LEVELS = { 0 }
+NOTE = "AppliedPrice MEDIAN, MaMethod SMMMA"
+
+
+
+function CALC()
+   local function CalculateSmoothedMA(rates_total, prev_calculated, begin, price, InpMAPeriod)
+      local ExtLineBuffer = {}
+
+      -- first calculation or number of bars was changed
+
+      local limit = InpMAPeriod + begin;
+      -- set empty value for first limit bars
+      for i = 1, limit, 1 do ExtLineBuffer[i] = 0.0; end
+      -- calculate first visible value
+      local firstValue = 0;
+      for j = 1, InpMAPeriod, 1 do
+         firstValue = firstValue + price[j];
+      end
+
+      ExtLineBuffer[limit - 1] = firstValue / InpMAPeriod;
+
+      -- main loop
+      for i = limit, rates_total, 1 do
+         ExtLineBuffer[i] = (ExtLineBuffer[i - 1] * (InpMAPeriod - 1) + price[i]) / InpMAPeriod
+      end
+
+      return ExtLineBuffer
+      --
+   end
+
+
+
+   ExtUpperShift = IN.JawsShift - IN.TeethShift;
+   ExtLowerShift = IN.TeethShift - IN.LipsShift;
+
+
+   ExtJawsBuffer = CalculateSmoothedMA(#MEDIAN, 0, 1, MEDIAN, IN.JawsPeriod)
+   ExtTeethBuffer = CalculateSmoothedMA(#MEDIAN, 0, 1, MEDIAN, IN.TeethPeriod)
+   ExtLipsBuffer = CalculateSmoothedMA(#MEDIAN, 0, 1, MEDIAN, IN.LipsPeriod)
+
+
+
+   ExtUpperShift = IN.JawsShift - IN.TeethShift;
+   ExtLowerShift = IN.TeethShift - IN.LipsShift;
+
+
+   local shift;
+   if (ExtUpperShift > ExtLowerShift) then
+      shift = ExtUpperShift;
+   else
+      shift = ExtLowerShift;
+   end
+
+   OUT.Upper = {}
+   OUT.UpperColor = {}
+   OUT.Lower = {}
+   OUT.LowerColor = {}
+
+   --last 2 counted bars will be recounted
+   local pos = -2;
+   if (pos < shift) then
+      for i = 1, shift, 1 do
+         OUT.Upper[i] = 0.0;
+         OUT.UpperColor[i] = CLR_GREEN;
+         OUT.Lower[i] = 0.0;
+         OUT.LowerColor[i] = CLR_GREEN;
+      end
+      pos = shift;
+   end
+
+   -- main cycle
+   local lower_limit = ExtLowerShift + IN.LipsShift + IN.LipsPeriod;
+   local upper_limit = ExtUpperShift + IN.TeethShift + IN.TeethPeriod;
+   for i = pos, #CLOSE, 1 do
+      if (i > lower_limit) then
+         -- calculate down buffer value
+         local dCurr = -math.abs(ExtTeethBuffer[i - ExtLowerShift] - ExtLipsBuffer[i]);
+         local dPrev = OUT.Lower[i - 1];
+         OUT.Lower[i] = dCurr;
+         -- set down buffer color
+         if (dPrev == dCurr) then
+            OUT.LowerColor[i] = OUT.LowerColor[i - 2];
+         else
+            if (dPrev < dCurr) then
+               OUT.LowerColor[i] = CLR_RED;
+            else
+               OUT.LowerColor[i] = CLR_GREEN;
+            end
+         end
+      else
+         OUT.Lower[i] = 0.0;
+         OUT.LowerColor[i] = CLR_GREEN;
+      end
+      if (i > upper_limit) then
+         -- calculate up buffer value
+         local dCurr = math.abs(ExtJawsBuffer[i - ExtUpperShift] - ExtTeethBuffer[i]);
+         OUT.Upper[i] = dCurr;
+         local dPrev = OUT.Upper[i - 1];
+         -- set up buffer color
+         if (dPrev == dCurr) then
+            OUT.UpperColor[i] = OUT.UpperColor[i - 2];
+         else
+            if (dPrev < dCurr) then
+               OUT.UpperColor[i] = CLR_GREEN;
+            else
+               OUT.UpperColor[i] = CLR_RED;
+            end
+         end
+      else
+         OUT.Upper[i] = 0.0;
+         OUT.UpperColor[i] = CLR_GREEN;
+      end
+   end
+end

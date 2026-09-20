@@ -1,0 +1,62 @@
+SEPARATEWINDOW = false
+IN = { TenkanPeriod = 9, KijunPeriod = 26, SenkouPeriod = 52 }
+OUT = {
+   Tenkan = { DRAW_LINE, CLR_RED, SHIFT_NONE },
+   Kijun = { DRAW_LINE, CLR_BLUE, SHIFT_NONE },
+   SpanA = { DRAW_LINE, CLR_BROWN, 26 },
+   SpanB = { DRAW_LINE, CLR_LAVENDER, 26 },
+   Chikou = { DRAW_LINE, CLR_GREEN, -26 },
+   Cloud = { DRAW_PAIRHISTOGRAM, CLR_OLIVE, 26 }
+}
+NOTE = "Ichimoku Kinko Hyo"
+
+
+local function Highest(array, range, fromIndex)
+   local res = array[fromIndex];
+   for i = fromIndex, 1, -1 do
+      if (i > fromIndex - range) then if (res < array[i]) then res = array[i] end end
+   end
+   return (res);
+end
+
+local function Lowest(array, range, fromIndex)
+   local res = array[fromIndex];
+   for i = fromIndex, 1, -1 do
+      if (i > fromIndex - range) then if (res > array[i]) then res = array[i] end end
+   end
+   return (res);
+end
+
+function CALC()
+   --BUFFERSSHIFT[5]=-KijunPeriod
+   --BUFFERSSHIFT[3]=KijunPeriod BUFFERSSHIFT[4]=KijunPeriod
+   -- indicator buffers
+   OUT.Tenkan = {}
+   OUT.Kijun = {}
+   OUT.SpanA = {}
+   OUT.SpanB = {}
+   OUT.Chikou = {}
+   OUT.Cloud = {}
+
+
+   for i = 1, #CLOSE, 1 do
+      OUT.Chikou[i] = CLOSE[i];
+      -- tenkan sen
+      local _high = Highest(HIGH, IN.TenkanPeriod, i);
+      local _low = Lowest(LOW, IN.TenkanPeriod, i);
+      OUT.Tenkan[i] = (_high + _low) / 2.0;
+      -- kijun sen
+      local _high = Highest(HIGH, IN.KijunPeriod, i);
+      local _low = Lowest(LOW, IN.KijunPeriod, i);
+      OUT.Kijun[i] = (_high + _low) / 2.0;
+      -- senkou span a
+      OUT.SpanA[i] = (OUT.Tenkan[i] + OUT.Kijun[i]) / 2.0;
+      -- senkou span b
+      local _high = Highest(HIGH, IN.SenkouPeriod, i);
+      local _low = Lowest(LOW, IN.SenkouPeriod, i);
+      OUT.SpanB[i] = (_high + _low) / 2.0;
+      ---cloud
+      OUT.Cloud[i * 2] = OUT.SpanA[i]
+      OUT.Cloud[i * 2 - 1] = OUT.SpanB[i]
+   end
+end

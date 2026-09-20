@@ -1,0 +1,13 @@
+SEPARATEWINDOW = false
+IN = {
+  Window = 9,
+  Offset = 0.85,
+  Sigma = 6,
+  ApplyTo = 0
+}
+OUT = { Alma = { DRAW_LINE, "Color", SHIFT_NONE } }
+NOTE = "Arnaud Legoux Moving Average - ApplyTo can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+   OUT.Alma,OUT.Color=ALMA(IN.ApplyTo, IN.Window, IN.Offset, IN.Sigma)
+end

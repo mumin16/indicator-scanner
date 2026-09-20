@@ -1,0 +1,16 @@
+SEPARATEWINDOW = false
+IN = {
+        Period = 14,
+        AtrPeriod = 14,
+        MultipleAtr = 3
+}
+OUT = {
+        ExitLong = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+        ExitShort = { DRAW_LINE, CLR_RED, SHIFT_NONE }
+}
+NOTE = "2022 Musavir"
+
+function CALC()
+        OUT.ExitLong = CEXITLONG(IN.Period, IN.AtrPeriod, IN.MultipleAtr)
+        OUT.ExitShort = CEXITSHORT(IN.Period, IN.AtrPeriod, IN.MultipleAtr)
+end

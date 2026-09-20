@@ -1,0 +1,9 @@
+SEPARATEWINDOW = true
+IN = { Period = 12, PriceType = 0 }
+OUT = { Dpo = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+LEVELS = { 0 }
+NOTE = "Detrended Price Oscillator - PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+  OUT.Dpo = DPO(IN.PriceType, IN.Period)
+end

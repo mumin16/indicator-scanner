@@ -1,0 +1,159 @@
+SEPARATEWINDOW = false
+
+IN = {
+    Length   = 200,
+    Mult     = 1.0,
+    FiltType = 0 -- 0=SMA, 1=EMA, 2=LWMA, 3=ALMA, 4=VWMA, 5=RMA
+}
+
+OUT = {
+    Upper2Channel = { DRAW_TRENDLINE, CLR_RED, SHIFT_NONE },
+    Upper1Channel = { DRAW_TRENDLINE, CLR_GREEN, SHIFT_NONE },
+    Q3Channel     = { DRAW_TRENDLINE, CLR_GREEN, SHIFT_NONE },
+    RegLine       = { DRAW_TRENDLINE, CLR_YELLOW, SHIFT_NONE },
+    Q1Channel     = { DRAW_TRENDLINE, CLR_GREEN,   SHIFT_NONE },
+    Lower1Channel = { DRAW_TRENDLINE, CLR_GREEN,   SHIFT_NONE },
+    Lower2Channel = { DRAW_TRENDLINE, CLR_RED,   SHIFT_NONE }
+}
+
+NOTE = "Expanded 7-Band Regression Channel\nBands: +2.0, +1.0, +0.5, Center, -0.5, -1.0, -2.0 StdDev"
+
+local function calc_filter(data, n, length, f_type)
+    if f_type == 1 then
+        -- EMA
+        local alpha = 2.0 / (length + 1)
+        local ema = data[n - length + 1]
+        for i = n - length + 2, n do
+            ema = (data[i] - ema) * alpha + ema
+        end
+        return ema
+
+    elseif f_type == 2 then
+        -- LWMA
+        local num_sum, den_sum = 0.0, 0.0
+        for i = 0, length - 1 do
+            local w = length - i
+            num_sum = num_sum + w * data[n - i]
+            den_sum = den_sum + w
+        end
+        return num_sum / den_sum
+
+    elseif f_type == 3 then
+        -- ALMA
+        local m = 0.85 * (length - 1)
+        local s = length / 6.0
+        local wtsum, cumwt = 0.0, 0.0
+        for i = 0, length - 1 do
+            local wt = math.exp(-((i - m) ^ 2) / (2 * (s ^ 2)))
+            wtsum = wtsum + wt * data[n - length + 1 + i]
+            cumwt = cumwt + wt
+        end
+        return wtsum / cumwt
+
+    elseif f_type == 4 and VOLUME then
+        -- VWMA
+        local vpsum, vsum = 0.0, 0.0
+        for i = n - length + 1, n do
+            local vol = (VOLUME[i] and VOLUME[i] > 0) and VOLUME[i] or 1.0
+            vpsum = vpsum + data[i] * vol
+            vsum  = vsum + vol
+        end
+        return vsum > 0 and (vpsum / vsum) or data[n]
+
+    elseif f_type == 5 then
+        -- RMA / SMMA
+        local alpha = 1.0 / length
+        local rma = data[n - length + 1]
+        for i = n - length + 2, n do
+            rma = alpha * data[i] + (1 - alpha) * rma
+        end
+        return rma
+
+    else
+        -- SMA
+        local sum = 0.0
+        for i = n - length + 1, n do
+            sum = sum + data[i]
+        end
+        return sum / length
+    end
+end
+
+function DW_ExpandedRegressionChannel(length, mult, f_type)
+    local N = #CLOSE
+    if N == 0 or N < length then
+        return {}, {}, {}, {}, {}, {}, {}
+    end
+
+    local reg_out    = {}
+    local upper2_out = {}
+    local upper1_out = {}
+    local q3_out     = {}
+    local q1_out     = {}
+    local lower1_out = {}
+    local lower2_out = {}
+
+    local mean_x = (length - 1) / 2.0
+    local var_x  = (length * length - 1) / 12.0
+
+    -- 1. Calculate Filtered Y Mean
+    local mean_y = calc_filter(CLOSE, N, length, f_type)
+
+    -- 2. Calculate Covariance (X, Y)
+    local cov_xy = 0.0
+    for i = 0, length - 1 do
+        cov_xy = cov_xy + (i - mean_x) * (CLOSE[N - length + 1 + i] - mean_y)
+    end
+    cov_xy = cov_xy / length
+
+    local slope = cov_xy / var_x
+
+    -- 3. Calculate Standard Deviation
+    local sum_sq_res = 0.0
+    for i = 0, length - 1 do
+        local y_pred = (mean_y - slope * mean_x) + slope * i
+        local res = CLOSE[N - length + 1 + i] - y_pred
+        sum_sq_res = sum_sq_res + res * res
+    end
+    local std_dev = math.sqrt(sum_sq_res / length) * mult
+
+    -- 4. Line Coordinates
+    local x1 = N - length
+    local x2 = N - 1
+    local y1_mid = mean_y - slope * mean_x
+    local y2_mid = mean_y + slope * (length - 1 - mean_x)
+
+    -- Center Line (0.0x)
+    table.insert(reg_out, x1); table.insert(reg_out, y1_mid)
+    table.insert(reg_out, x2); table.insert(reg_out, y2_mid)
+
+    -- Upper Channel 2 (+2.0x StdDev)
+    table.insert(upper2_out, x1); table.insert(upper2_out, y1_mid + std_dev * 2.0)
+    table.insert(upper2_out, x2); table.insert(upper2_out, y2_mid + std_dev * 2.0)
+
+    -- Upper Channel 1 (+1.0x StdDev)
+    table.insert(upper1_out, x1); table.insert(upper1_out, y1_mid + std_dev * 1.0)
+    table.insert(upper1_out, x2); table.insert(upper1_out, y2_mid + std_dev * 1.0)
+
+    -- Q3 Channel (+0.5x StdDev)
+    table.insert(q3_out, x1); table.insert(q3_out, y1_mid + std_dev * 0.5)
+    table.insert(q3_out, x2); table.insert(q3_out, y2_mid + std_dev * 0.5)
+
+    -- Q1 Channel (-0.5x StdDev)
+    table.insert(q1_out, x1); table.insert(q1_out, y1_mid - std_dev * 0.5)
+    table.insert(q1_out, x2); table.insert(q1_out, y2_mid - std_dev * 0.5)
+
+    -- Lower Channel 1 (-1.0x StdDev)
+    table.insert(lower1_out, x1); table.insert(lower1_out, y1_mid - std_dev * 1.0)
+    table.insert(lower1_out, x2); table.insert(lower1_out, y2_mid - std_dev * 1.0)
+
+    -- Lower Channel 2 (-2.0x StdDev)
+    table.insert(lower2_out, x1); table.insert(lower2_out, y1_mid - std_dev * 2.0)
+    table.insert(lower2_out, x2); table.insert(lower2_out, y2_mid - std_dev * 2.0)
+
+    return reg_out, upper2_out, upper1_out, q3_out, q1_out, lower1_out, lower2_out
+end
+
+function CALC()
+    OUT.RegLine, OUT.Upper2Channel, OUT.Upper1Channel, OUT.Q3Channel, OUT.Q1Channel, OUT.Lower1Channel, OUT.Lower2Channel = DW_ExpandedRegressionChannel(IN.Length, IN.Mult, IN.FiltType)
+end

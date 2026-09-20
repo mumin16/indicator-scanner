@@ -1,0 +1,13 @@
+SEPARATEWINDOW = true
+IN = { Period = 10 }
+OUT = {
+  Rvi = { DRAW_LINE, CLR_GREEN, SHIFT_NONE },
+  RviSignal = { DRAW_LINE, CLR_RED, SHIFT_NONE }
+}
+LEVELS = { 0 }
+NOTE = "Relative Vigor Index"
+
+function CALC()
+  OUT.Rvi = RVI(IN.Period)
+  OUT.RviSignal = RVISIGNAL(IN.Period)
+end

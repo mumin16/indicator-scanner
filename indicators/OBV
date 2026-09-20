@@ -1,0 +1,8 @@
+SEPARATEWINDOW = true
+IN = { PriceType = 0 }
+OUT = { Obv = { DRAW_LINE, CLR_GREEN, SHIFT_NONE } }
+NOTE = "On Balance Volume - PriceType can be CLOSE=0 OPEN=1 HIGH=2 LOW=3 MEDIAN=4 TYPICAL=5 WEIGHTED=6"
+
+function CALC()
+  OUT.Obv = OBV(IN.PriceType)
+end
