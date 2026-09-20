@@ -1,0 +1,27 @@
+OPT = {
+  ASClength = { min = 9, max = 21, step = 3 },
+  RISK = { min = 9, max = 21, step = 3 }
+}
+
+REPORT = {}
+
+NOTE = "ASCTrend Test\nCondition: BuySell(TrendUp  TrendDown)"
+
+function CALC()
+  for opt1 = OPT.ASClength.min, OPT.ASClength.max, OPT.ASClength.step do
+    for opt2 = OPT.RISK.min, OPT.RISK.max, OPT.RISK.step do
+      local trend, _, _ = ASCTrend(opt1, opt2)
+
+      local BuySignals = {}
+      local SellSignals = {}
+
+      for i = 2, #CLOSE, 1 do
+        if (trend[i] == 1 and trend[i - 1] == -1) then table.insert(BuySignals, i) end
+        if (trend[i] == -1 and trend[i - 1] == 1) then table.insert(SellSignals, i) end
+      end
+
+
+      table.insert(REPORT, CreateTestReport(BuySignals, SellSignals, { ASClength = opt1, RISK = opt2 }))
+    end
+  end
+end

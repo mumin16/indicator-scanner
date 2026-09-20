@@ -1,0 +1,29 @@
+OPT = { Period = { min = 20, max = 100, step = 20 }, Smooth = { min = 7, max = 21, step = 7 } }
+
+REPORT = {}
+
+NOTE = "Larry Williams' Percent Range and Hull Moving Average Test\nCondition: BuySell(RAvarage<>-80 -20)"
+
+function CALC()
+  for opt1 = OPT.Period.min, OPT.Period.max, OPT.Period.step do
+    for opt2 = OPT.Smooth.min, OPT.Smooth.max, OPT.Smooth.step do
+      local WPr = WPR(opt1)
+      local WPrAvg = HMA(WPr, opt2)
+      local diff = #CLOSE - #WPrAvg
+
+      local BuySignals = {}
+      local SellSignals = {}
+      for i = 2, #WPrAvg, 1 do
+        if (WPrAvg[i] > -80 and WPrAvg[i - 1] < -80) or (WPrAvg[i] > -20 and WPrAvg[i - 1] < -20) then table.insert(
+          BuySignals, i + diff) end
+        if (WPrAvg[i] < -80 and WPrAvg[i - 1] > -80) or (WPrAvg[i] < -20 and WPrAvg[i - 1] > -20) then table.insert(
+          SellSignals, i + diff) end
+      end
+
+
+
+
+      table.insert(REPORT, CreateTestReport(BuySignals, SellSignals, { Period = opt1, Smooth = opt2 }))
+    end
+  end
+end

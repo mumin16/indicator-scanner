@@ -1,0 +1,29 @@
+OPT = {
+  FastLimit = { min = 0.3, max = 0.7, step = 0.1 },
+  SlowLimit = { min = 0.03, max = 0.07, step = 0.01 }
+}
+
+REPORT = {}
+
+NOTE = "MamaFama Test\nCondition: BuySell(Mama<>Fama)"
+
+function CALC()
+  for opt1 = OPT.FastLimit.min, OPT.FastLimit.max, OPT.FastLimit.step do
+    for opt2 = OPT.SlowLimit.min, OPT.SlowLimit.max, OPT.SlowLimit.step do
+      local Mama, Fama = MamaFamaOsc(MEDIAN, opt1, opt2)
+
+
+      local BuySignals = {}
+      local SellSignals = {}
+      for i = 2, #CLOSE, 1 do
+        if Mama[i] > Fama[i] and Mama[i - 1] < Fama[i - 1] then table.insert(BuySignals, i) end
+        if Mama[i] < Fama[i] and Mama[i - 1] > Fama[i - 1] then table.insert(SellSignals, i) end
+      end
+
+
+
+
+      table.insert(REPORT, CreateTestReport(BuySignals, SellSignals, { FastLimit = opt1, SlowLimit = opt2 }))
+    end
+  end
+end

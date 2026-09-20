@@ -1,0 +1,41 @@
+OPT = {
+  FastEma = { min = 5, max = 50, step = 5 },
+  SlowEma = { min = 5, max = 50, step = 5 },
+}
+
+REPORT = {}
+
+NOTE = "Bollinger Band Macd Test\nCondition: BuySell(Signal<>0 or previous) \nNote:  MacdSma=SlowEma"
+
+function CALC()
+  for opt1 = OPT.FastEma.min, OPT.FastEma.max, OPT.FastEma.step do
+    for opt2 = OPT.SlowEma.min, OPT.SlowEma.max, OPT.SlowEma.step do
+      if (opt1 == opt2) then goto continue end
+
+      local pricetype = 6
+      local MacdSma = opt2
+      local Signal = SMA(MACD(pricetype, opt1, opt2), MacdSma)
+
+
+      if (#Signal < 3) then goto continue end
+      local diff = #CLOSE - #Signal
+
+      local BuySignals = {}
+      local SellSignals = {}
+
+      for i = 3, #Signal, 1 do
+        if (Signal[i] > 0 and Signal[i - 1] < 0) or (Signal[i] > 0 and Signal[i] > Signal[i - 1] and Signal[i - 1] < Signal[i - 2]) then
+          table.insert(BuySignals, i + diff) end
+        if (Signal[i] < 0 and Signal[i - 1] > 0) or (Signal[i] > 0 and Signal[i] < Signal[i - 1] and Signal[i - 1] > Signal[i - 2]) then
+          table.insert(SellSignals, i + diff) end
+      end
+
+
+
+
+      table.insert(REPORT, CreateTestReport(BuySignals, SellSignals, { FastEma = opt1, SlowEma = opt2 }))
+
+      ::continue::
+    end
+  end
+end

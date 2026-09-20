@@ -1,0 +1,30 @@
+OPT = { KPeriod = { min = 10, max = 50, step = 10 }, Slowing = { min = 5, max = 25, step = 5 } }
+
+REPORT = {}
+
+NOTE = "Stochastic Test\nCondition: BuySell(Stoch<>20,80)"
+
+function CALC()
+  for opt1 = OPT.KPeriod.min, OPT.KPeriod.max, OPT.KPeriod.step do
+    for opt2 = OPT.Slowing.min, OPT.Slowing.max, OPT.Slowing.step do
+      local Stoch = STOCHASTIC(opt1, opt2)
+
+      local diff = #CLOSE - #Stoch
+
+      local BuySignals = {}
+      local SellSignals = {}
+
+      for i = 2, #Stoch, 1 do
+        if (Stoch[i] > 20 and Stoch[i - 1] < 20) or (Stoch[i] > 80 and Stoch[i - 1] < 80) then table.insert(BuySignals,
+            i + diff) end
+        if (Stoch[i] < 20 and Stoch[i - 1] > 20) or (Stoch[i] < 80 and Stoch[i - 1] > 80) then table.insert(SellSignals,
+            i + diff) end
+      end
+
+
+
+
+      table.insert(REPORT, CreateTestReport(BuySignals, SellSignals, { KPeriod = opt1, Slowing = opt2 }))
+    end
+  end
+end

@@ -1,0 +1,14 @@
+OPT = { Period = { min = 7, max = 49, step = 7 } }
+
+REPORT = {}
+
+NOTE = "Aroon Test\nCondition: BuySell(AroonUp<>AroonDown)"
+
+function CALC()
+  for opt1 = OPT.Period.min, OPT.Period.max, OPT.Period.step do
+    local BuySignals, SellSignals = CROSS2(AROON(opt1))
+
+
+    table.insert(REPORT, CreateTestReport(BuySignals, SellSignals, { Period = opt1 }))
+  end
+end

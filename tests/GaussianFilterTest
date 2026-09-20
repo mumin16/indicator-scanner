@@ -1,0 +1,32 @@
+OPT = {
+  length = { min = 10, max = 20, step = 1 },
+  sigma = { min = 2, max = 8, step = 1 }
+}
+
+REPORT = {}
+
+NOTE = "Gaussian Filter\nCondition: BuySell(cur>prev)"
+
+function CALC()
+  for opt1 = OPT.length.min, OPT.length.max, OPT.length.step do
+    for opt2 = OPT.sigma.min, OPT.sigma.max, OPT.sigma.step do
+    
+      local Gauss, _ = gaussian_filter(CLOSE, opt1, opt2)
+      local diff=#CLOSE-#Gauss
+    
+      local BuySignals = {}
+      local SellSignals = {}
+
+      for i = 3, #Gauss, 1 do
+        if Gauss[i]>Gauss[i-1] and Gauss[i-1]<Gauss[i-2]
+          then table.insert(BuySignals, i+diff) end
+        if Gauss[i]<Gauss[i-1] and Gauss[i-1]>Gauss[i-2]
+          then table.insert(SellSignals, i+diff) end
+      end
+
+
+      table.insert(REPORT, CreateTestReport(BuySignals, SellSignals, { length = opt1, sigma = opt2 }))
+    end
+  end
+end
+

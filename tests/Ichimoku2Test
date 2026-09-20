@@ -1,0 +1,36 @@
+OPT = { tenkan_period = { min = 3, max = 15, step = 3 }, kijun_period = { min = 16, max = 36, step = 5 }, senkou_period = { min = 32, max = 72, step = 10 } }
+
+REPORT = {}
+
+NOTE = "Ichimoku2 Test\nCondition: SpanA SpanB CLOSE cross over"
+
+function CALC()
+  for opt1 = OPT.tenkan_period.min, OPT.tenkan_period.max, OPT.tenkan_period.step do
+    for opt2 = OPT.kijun_period.min, OPT.kijun_period.max, OPT.kijun_period.step do
+      for opt3 = OPT.senkou_period.min, OPT.senkou_period.max, OPT.senkou_period.step do
+        if ((opt1 > opt2 or opt1 > opt3) or (opt2 > opt3 or opt2 < opt1) or (opt3 < opt1 or opt3 < opt2)) then goto continue end
+
+        local SpanA,SpanB,_,_=Ichimoku(opt1 , opt2 , opt3  )
+
+          
+        local BuySignals, SellSignals = {},{}
+        
+      for i = 2, #CLOSE, 1 do
+        if (SpanA[i]>SpanB[i] and SpanA[i-1]<SpanB[i-1]) 
+        or (SpanA[i]>SpanB[i] and CLOSE[i]>SpanA[i] and CLOSE[i-1]<SpanA[i-1])
+          then table.insert(BuySignals, i) end
+        if (SpanA[i]<SpanB[i] and SpanA[i-1]>SpanB[i-1]) 
+        or (CLOSE[i]<SpanB[i] and CLOSE[i-1]>SpanB[i-1])
+          then table.insert(SellSignals, i) end
+      end
+      
+
+        table.insert(REPORT, CreateTestReport(BuySignals, SellSignals, { tenkan_period = opt1, kijun_period = opt2, senkou_period =
+        opt3 }))
+
+
+        ::continue::
+      end
+    end
+  end
+end
